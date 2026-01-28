@@ -13,11 +13,8 @@ const yearLabel = document.getElementById("yearLabel");
 const prevYearBtn = document.getElementById("prevYear");
 const nextYearBtn = document.getElementById("nextYear");
 const todayBtn = document.getElementById("todayBtn");
-const selectedDateLabel = document.getElementById("selectedDateLabel");
-const dayMeta = document.getElementById("dayMeta");
-const eventList = document.getElementById("eventList");
 const eventForm = document.getElementById("eventForm");
-const openAddEvent = document.getElementById("openAddEvent");
+const addBtn = document.getElementById("addBtn");
 const eventModal = document.getElementById("eventModal");
 const closeModal = document.getElementById("closeModal");
 const eventIdInput = document.getElementById("eventId");
@@ -41,13 +38,23 @@ const exportBtn = document.getElementById("exportBtn");
 const exportBox = document.getElementById("exportBox");
 const exportText = document.getElementById("exportText");
 const copyExportBtn = document.getElementById("copyExport");
-const clearEventsBtn = document.getElementById("clearEvents");
 const openImportModalBtn = document.getElementById("openImportModal");
 const importModal = document.getElementById("importModal");
 const closeImportModal = document.getElementById("closeImportModal");
-const blackoutList = document.getElementById("blackoutList");
-const addBlackoutBtn = document.getElementById("addBlackout");
-const blackoutStatusEl = document.getElementById("blackoutStatus");
+const createModal = document.getElementById("createModal");
+const closeCreateModal = document.getElementById("closeCreateModal");
+const createEventBtn = document.getElementById("createEvent");
+const createBlackoutBtn = document.getElementById("createBlackout");
+const blackoutModal = document.getElementById("blackoutModal");
+const closeBlackoutModal = document.getElementById("closeBlackoutModal");
+const blackoutDateInput = document.getElementById("blackoutDateInput");
+const confirmBlackoutBtn = document.getElementById("confirmBlackout");
+const dayModal = document.getElementById("dayModal");
+const closeDayModal = document.getElementById("closeDayModal");
+const dayModalTitle = document.getElementById("dayModalTitle");
+const dayModalIso = document.getElementById("dayModalIso");
+const dayEventList = document.getElementById("dayEventList");
+const toggleBlackoutBtn = document.getElementById("toggleBlackout");
 
 const isHybrid = Boolean(window?.HybridWebView?.InvokeDotNet);
 
@@ -298,6 +305,7 @@ function renderCalendar() {
         selectedDate = iso;
         renderCalendar();
         renderDayPanel();
+        openDayModal();
       });
 
       daysGrid.appendChild(dayEl);
@@ -309,89 +317,92 @@ function renderCalendar() {
 }
 
 function renderDayPanel() {
-  if (blackoutStatusEl && addBlackoutBtn) {
-    if (!selectedDate) {
-      blackoutStatusEl.textContent = "Select a date to manage blackouts.";
-      addBlackoutBtn.textContent = "Add blackout";
-      addBlackoutBtn.disabled = true;
-    } else if (blackouts.includes(selectedDate)) {
-      blackoutStatusEl.textContent = "This date is marked as a blackout.";
-      addBlackoutBtn.textContent = "Remove blackout";
-      addBlackoutBtn.disabled = false;
-    } else {
-      blackoutStatusEl.textContent = "This date is available.";
-      addBlackoutBtn.textContent = "Add blackout";
-      addBlackoutBtn.disabled = false;
-    }
-  }
+  return;
+}
 
-  if (!selectedDate) {
-    selectedDateLabel.textContent = "Select a day";
-    dayMeta.textContent = "Click a date to manage events.";
-    eventList.innerHTML = "";
-    renderBlackouts();
-    return;
-  }
-
+function renderDayModal() {
+  if (!dayModal || !selectedDate) return;
   const readable = new Date(selectedDate).toLocaleDateString(undefined, {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
   });
-
-  selectedDateLabel.textContent = readable;
-  dayMeta.textContent = selectedDate;
-
-  const dayMatches = dateEntriesByDate()[selectedDate] || [];
-  eventList.innerHTML = "";
-
-  if (blackouts.includes(selectedDate)) {
-    eventList.innerHTML = '<div class="muted">Blackout date.</div>';
-    renderBlackouts();
-    return;
+  if (dayModalTitle) {
+    dayModalTitle.textContent = readable;
   }
-
+  if (dayModalIso) {
+    dayModalIso.textContent = selectedDate;
+  }
+  if (toggleBlackoutBtn) {
+    const isBlackout = blackouts.includes(selectedDate);
+    toggleBlackoutBtn.textContent = isBlackout ? "Remove blackout" : "Add blackout";
+  }
+  if (!dayEventList) return;
+  const dayMatches = dateEntriesByDate()[selectedDate] || [];
+  dayEventList.innerHTML = "";
+  if (blackouts.includes(selectedDate)) {
+    const note = document.createElement("div");
+    note.className = "muted";
+    note.textContent = "This day is blocked out.";
+    dayEventList.appendChild(note);
+  }
   if (dayMatches.length === 0) {
-    eventList.innerHTML = '<div class="muted">No events yet.</div>';
-    renderBlackouts();
+    const empty = document.createElement("div");
+    empty.className = "muted";
+    empty.textContent = "No events yet.";
+    dayEventList.appendChild(empty);
     return;
   }
 
   dayMatches.forEach(({ event, entry }) => {
-    const card = document.createElement("div");
-    card.className = `event-card ${
-      entry.statusVendor === "rejected" || entry.statusPerformer === "rejected"
-        ? "rejected"
-        : ""
-    }`;
+    const item = document.createElement("div");
+    item.className = "day-item";
 
     const header = document.createElement("div");
-    header.className = "event-card__row";
+    header.className = "day-item__row";
 
     const title = document.createElement("strong");
     title.textContent = event.title;
     header.appendChild(title);
 
     const actions = document.createElement("div");
-    actions.className = "event-card__row";
+    actions.className = "day-item__row";
 
     const editBtn = document.createElement("button");
     editBtn.className = "ghost-btn";
-    editBtn.textContent = "Edit";
-    editBtn.addEventListener("click", () => openModal(event, entry));
+    editBtn.textContent = "✎";
+    editBtn.setAttribute("aria-label", "Edit event");
+    editBtn.title = "Edit event";
+    editBtn.addEventListener("click", () => {
+      closeDayModalUI();
+      openModal(event, entry);
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "ghost-btn";
+    removeBtn.textContent = "🗑";
+    removeBtn.setAttribute("aria-label", "Remove date");
+    removeBtn.title = "Remove date";
+    removeBtn.addEventListener("click", () => {
+      removeDateEntry(event.id, entry.date);
+      renderDayModal();
+    });
 
     actions.appendChild(editBtn);
+    actions.appendChild(removeBtn);
     header.appendChild(actions);
 
-    const meta = document.createElement("div");
-    meta.className = "event-card__meta";
+    item.appendChild(header);
+
+    const controls = document.createElement("div");
+    controls.className = "day-item__controls";
 
     const vendorEnabled = entry.type === "vendor" || entry.type === "both";
     const performerEnabled = entry.type === "performer" || entry.type === "both";
 
     const vendorRow = document.createElement("div");
-    vendorRow.className = "event-card__row";
+    vendorRow.className = "day-item__row";
 
     const vendorToggle = document.createElement("button");
     vendorToggle.className = `type-toggle-btn ${vendorEnabled ? "active" : ""}`;
@@ -406,31 +417,31 @@ function renderDayPanel() {
       }));
     });
 
-    const vendorStatus = document.createElement("select");
-    vendorStatus.className = "status-select";
+    const vendorStatusGroup = document.createElement("div");
+    vendorStatusGroup.className = "status-buttons";
     ["contacted", "submitted", "pending", "confirmed", "rejected"].forEach(
       (status) => {
-        const option = document.createElement("option");
-        option.value = status;
-        option.textContent = status;
-        vendorStatus.appendChild(option);
+        const btn = document.createElement("button");
+        btn.className = `status-btn status-${status} ${
+          entry.statusVendor === status ? "active" : ""
+        }`;
+        btn.textContent = status;
+        btn.disabled = !vendorEnabled;
+        btn.addEventListener("click", () => {
+          updateEntry(event.id, entry.date, (current) => ({
+            ...current,
+            statusVendor: status,
+          }));
+        });
+        vendorStatusGroup.appendChild(btn);
       }
     );
-    vendorStatus.value = entry.statusVendor;
-    vendorStatus.disabled = !vendorEnabled;
-    vendorStatus.addEventListener("change", () => {
-      updateEntry(event.id, entry.date, (current) => ({
-        ...current,
-        statusVendor: vendorStatus.value,
-      }));
-    });
 
     vendorRow.appendChild(vendorToggle);
-    vendorRow.appendChild(vendorStatus);
-    meta.appendChild(vendorRow);
+    vendorRow.appendChild(vendorStatusGroup);
 
     const performerRow = document.createElement("div");
-    performerRow.className = "event-card__row";
+    performerRow.className = "day-item__row";
 
     const performerToggle = document.createElement("button");
     performerToggle.className = `type-toggle-btn ${
@@ -447,53 +458,48 @@ function renderDayPanel() {
       }));
     });
 
-    const performerStatus = document.createElement("select");
-    performerStatus.className = "status-select";
+    const performerStatusGroup = document.createElement("div");
+    performerStatusGroup.className = "status-buttons";
     ["contacted", "submitted", "pending", "confirmed", "rejected"].forEach(
       (status) => {
-        const option = document.createElement("option");
-        option.value = status;
-        option.textContent = status;
-        performerStatus.appendChild(option);
+        const btn = document.createElement("button");
+        btn.className = `status-btn status-${status} ${
+          entry.statusPerformer === status ? "active" : ""
+        }`;
+        btn.textContent = status;
+        btn.disabled = !performerEnabled;
+        btn.addEventListener("click", () => {
+          updateEntry(event.id, entry.date, (current) => ({
+            ...current,
+            statusPerformer: status,
+          }));
+        });
+        performerStatusGroup.appendChild(btn);
       }
     );
-    performerStatus.value = entry.statusPerformer;
-    performerStatus.disabled = !performerEnabled;
-    performerStatus.addEventListener("change", () => {
-      updateEntry(event.id, entry.date, (current) => ({
-        ...current,
-        statusPerformer: performerStatus.value,
-      }));
-    });
 
     performerRow.appendChild(performerToggle);
-    performerRow.appendChild(performerStatus);
-    meta.appendChild(performerRow);
+    performerRow.appendChild(performerStatusGroup);
 
-    const footer = document.createElement("div");
-    footer.className = "event-card__row";
+    controls.appendChild(vendorRow);
+    controls.appendChild(performerRow);
 
-    const removeDate = document.createElement("button");
-    removeDate.className = "ghost-btn";
-    removeDate.textContent = "Remove date";
-    removeDate.addEventListener("click", () => {
-      removeDateEntry(event.id, entry.date);
-    });
-
-    const addDate = document.createElement("button");
-    addDate.className = "ghost-btn";
-    addDate.textContent = "Add date";
-    addDate.addEventListener("click", () => openModal(event, null));
-
-    footer.appendChild(addDate);
-    footer.appendChild(removeDate);
-
-    card.appendChild(header);
-    card.appendChild(meta);
-    card.appendChild(footer);
-    eventList.appendChild(card);
+    item.appendChild(controls);
+    dayEventList.appendChild(item);
   });
-  renderBlackouts();
+}
+
+function openDayModal() {
+  if (!dayModal || !selectedDate) return;
+  renderDayModal();
+  dayModal.classList.remove("hidden");
+  dayModal.setAttribute("aria-hidden", "false");
+}
+
+function closeDayModalUI() {
+  if (!dayModal) return;
+  dayModal.classList.add("hidden");
+  dayModal.setAttribute("aria-hidden", "true");
 }
 
 function addEvent(event) {
@@ -501,6 +507,7 @@ function addEvent(event) {
   saveEvents(events);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function updateEvent(updated) {
@@ -508,6 +515,7 @@ function updateEvent(updated) {
   saveEvents(events);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function removeEvent(id) {
@@ -515,6 +523,7 @@ function removeEvent(id) {
   saveEvents(events);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function clearEvents() {
@@ -525,29 +534,6 @@ function clearEvents() {
   renderDayPanel();
 }
 
-function renderBlackouts() {
-  if (!blackoutList) return;
-  blackoutList.innerHTML = "";
-  const sorted = [...blackouts].sort();
-  if (sorted.length === 0) {
-    blackoutList.innerHTML = '<div class="muted">None</div>';
-    return;
-  }
-  sorted.forEach((date) => {
-    const row = document.createElement("div");
-    row.className = "blackout-row";
-    const label = document.createElement("span");
-    label.textContent = date;
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "ghost-btn";
-    removeBtn.textContent = "Remove";
-    removeBtn.addEventListener("click", () => removeBlackout(date));
-    row.appendChild(label);
-    row.appendChild(removeBtn);
-    blackoutList.appendChild(row);
-  });
-}
-
 function addBlackout(date) {
   if (!date) return;
   if (!/\d{4}-\d{2}-\d{2}/.test(date)) return;
@@ -556,6 +542,7 @@ function addBlackout(date) {
   saveBlackouts(blackouts);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function removeBlackout(date) {
@@ -563,6 +550,7 @@ function removeBlackout(date) {
   saveBlackouts(blackouts);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function updateEntry(eventId, date, updater) {
@@ -585,6 +573,7 @@ function updateEntry(eventId, date, updater) {
   saveEvents(events);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function removeDateEntry(eventId, date) {
@@ -598,6 +587,7 @@ function removeDateEntry(eventId, date) {
   saveEvents(events);
   renderCalendar();
   renderDayPanel();
+  renderDayModal();
 }
 
 function enforceSingleConfirmed(date, eventId) {
@@ -671,6 +661,33 @@ function closeModalUI() {
   selectedDates = new Set();
   updateSelectedDatesLabel();
   deleteEventBtn.classList.add("hidden");
+}
+
+function openCreateModal() {
+  if (!createModal) return;
+  createModal.classList.remove("hidden");
+  createModal.setAttribute("aria-hidden", "false");
+}
+
+function closeCreateModalUI() {
+  if (!createModal) return;
+  createModal.classList.add("hidden");
+  createModal.setAttribute("aria-hidden", "true");
+}
+
+function openBlackoutModal(date = selectedDate) {
+  if (!blackoutModal) return;
+  if (blackoutDateInput) {
+    blackoutDateInput.value = date || "";
+  }
+  blackoutModal.classList.remove("hidden");
+  blackoutModal.setAttribute("aria-hidden", "false");
+}
+
+function closeBlackoutModalUI() {
+  if (!blackoutModal) return;
+  blackoutModal.classList.add("hidden");
+  blackoutModal.setAttribute("aria-hidden", "true");
 }
 
 function openImportModal() {
@@ -797,7 +814,12 @@ function mapMarksLegends(parsed) {
   });
 }
 
-function handleImportPayload(rawText) {
+function normalizeBlackouts(list) {
+  if (!Array.isArray(list)) return [];
+  return list.filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date));
+}
+
+function handleImportPayload(rawText, mode = "merge") {
   try {
     const parsed = JSON.parse(rawText);
     let list = Array.isArray(parsed) ? parsed : parsed?.events;
@@ -805,17 +827,30 @@ function handleImportPayload(rawText) {
       list = mapMarksLegends(parsed);
     }
     if (!Array.isArray(list)) {
-      alert("JSON must be an array of events, {events:[...]}, or {marks, legends}.");
-      return;
+      if (Array.isArray(parsed?.blackouts)) {
+        list = [];
+      } else {
+        alert(
+          "JSON must be an array of events, {events:[...]}, or {marks, legends}."
+        );
+        return;
+      }
     }
 
     const imported = list.map(normalizeEvent).filter(Boolean);
-    if (imported.length === 0) {
+    const incomingBlackouts = normalizeBlackouts(parsed?.blackouts);
+    if (imported.length === 0 && incomingBlackouts.length === 0) {
       alert("No valid events found in JSON.");
       return;
     }
 
-    events = [...events, ...imported];
+    if (mode === "replace") {
+      events = imported;
+      blackouts = incomingBlackouts;
+    } else {
+      events = [...events, ...imported];
+      blackouts = Array.from(new Set([...blackouts, ...incomingBlackouts]));
+    }
     const seen = new Map();
     events.forEach((event) => {
       event.dates.forEach((entry) => {
@@ -831,6 +866,7 @@ function handleImportPayload(rawText) {
       })
       .filter((event) => event.dates.length > 0);
     saveEvents(events);
+    saveBlackouts(blackouts);
     renderCalendar();
     renderDayPanel();
   } catch (error) {
@@ -870,9 +906,29 @@ async function importFromNativePicker() {
   }
 }
 
+function exportState() {
+  return JSON.stringify({ events, blackouts }, null, 2);
+}
+
+function resetCalendar() {
+  events = [];
+  blackouts = [];
+  saveEvents(events);
+  saveBlackouts(blackouts);
+  selectedDate = null;
+  renderCalendar();
+  renderDayPanel();
+}
+
+function importFromBase64(base64, mode = "replace") {
+  const raw = atob(base64);
+  handleImportPayload(raw, mode);
+}
+
 function exportJson() {
   const payload = {
     events,
+    blackouts,
   };
   const json = JSON.stringify(payload, null, 2);
   if (exportText) {
@@ -936,7 +992,52 @@ importModal?.addEventListener("click", (event) => {
     closeImportModalUI();
   }
 });
-openAddEvent.addEventListener("click", () => openModal());
+addBtn?.addEventListener("click", openCreateModal);
+closeCreateModal?.addEventListener("click", closeCreateModalUI);
+createModal?.addEventListener("click", (event) => {
+  if (event.target?.dataset?.close === "true") {
+    closeCreateModalUI();
+  }
+});
+createEventBtn?.addEventListener("click", () => {
+  closeCreateModalUI();
+  openModal();
+});
+createBlackoutBtn?.addEventListener("click", () => {
+  closeCreateModalUI();
+  openBlackoutModal();
+});
+closeBlackoutModal?.addEventListener("click", closeBlackoutModalUI);
+blackoutModal?.addEventListener("click", (event) => {
+  if (event.target?.dataset?.close === "true") {
+    closeBlackoutModalUI();
+  }
+});
+confirmBlackoutBtn?.addEventListener("click", () => {
+  const date = blackoutDateInput?.value || selectedDate;
+  if (!date) {
+    alert("Select a date first.");
+    return;
+  }
+  addBlackout(date);
+  closeBlackoutModalUI();
+  renderDayModal();
+});
+toggleBlackoutBtn?.addEventListener("click", () => {
+  if (!selectedDate) return;
+  if (blackouts.includes(selectedDate)) {
+    removeBlackout(selectedDate);
+  } else {
+    addBlackout(selectedDate);
+  }
+  renderDayModal();
+});
+closeDayModal?.addEventListener("click", closeDayModalUI);
+dayModal?.addEventListener("click", (event) => {
+  if (event.target?.dataset?.close === "true") {
+    closeDayModalUI();
+  }
+});
 closeModal.addEventListener("click", closeModalUI);
 eventModal.addEventListener("click", (event) => {
   if (event.target?.dataset?.close === "true") {
@@ -969,26 +1070,11 @@ clearDatesBtn.addEventListener("click", () => {
   updateSelectedDatesLabel();
   renderMultiDatePicker();
 });
-clearEventsBtn.addEventListener("click", () => {
-  if (!events.length) return;
-  const confirmed = confirm("Remove all events? This cannot be undone.");
-  if (!confirmed) return;
-  clearEvents();
-});
-addBlackoutBtn.addEventListener("click", () => {
-  if (!selectedDate) return;
-  if (blackouts.includes(selectedDate)) {
-    removeBlackout(selectedDate);
-    return;
-  }
-  addBlackout(selectedDate);
-});
 vendorCheck.addEventListener("change", syncStatusInputs);
 performerCheck.addEventListener("change", syncStatusInputs);
 
 renderCalendar();
 renderDayPanel();
-renderBlackouts();
 
 window.__APP__ = {
   getState: () => ({
@@ -1005,5 +1091,10 @@ window.__APP__ = {
     saveEvents(events);
     renderAll();
   },
+  exportState,
+  importFromBase64,
+  resetCalendar,
+  openNewEvent: () => openModal(),
+  openNewBlackout: () => openBlackoutModal(),
   renderAll,
 };

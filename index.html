@@ -15,74 +15,19 @@
   <body>
     <div class="app">
       <header class="topbar">
-        <div class="brand">
-          <span class="brand__title">Event Loom</span>
-          <span class="brand__subtitle">Year Planner</span>
-        </div>
         <div class="controls">
           <button id="prevYear" class="icon-btn" aria-label="Previous year">◀</button>
           <div class="year" id="yearLabel">2026</div>
           <button id="nextYear" class="icon-btn" aria-label="Next year">▶</button>
           <button id="todayBtn" class="ghost-btn">Today</button>
         </div>
+        <button id="addBtn" class="primary-btn add-btn" aria-label="Add">
+          <span>+</span>
+        </button>
       </header>
 
       <main class="layout">
         <section class="calendar" id="calendar"></section>
-
-        <aside class="panel">
-          <div class="panel__section">
-            <h2 id="selectedDateLabel">Select a day</h2>
-            <div id="dayMeta" class="muted">Click a date to manage events.</div>
-          </div>
-
-          <div class="panel__section">
-            <h3>Events</h3>
-            <div id="eventList" class="event-list"></div>
-            <button id="clearEvents" class="ghost-btn">Clear all events</button>
-          </div>
-
-          <div class="panel__section">
-            <h3>Add event</h3>
-            <button id="openAddEvent" class="primary-btn">Add event</button>
-          </div>
-
-          <div class="panel__section">
-            <h3>Import / Export</h3>
-            <button id="openImportModal" class="ghost-btn">Open import/export</button>
-          </div>
-
-          <div class="panel__section legend">
-            <h3>Legend</h3>
-            <div class="legend__row">
-              <span class="legend-swatch vendor"></span>
-              <span>Vendor (bottom half = pending)</span>
-            </div>
-            <div class="legend__row">
-              <span class="legend-swatch performer"></span>
-              <span>Performer (bottom half = pending)</span>
-            </div>
-            <div class="legend__row">
-              <span class="legend-swatch split"></span>
-              <span>Both (split circle)</span>
-            </div>
-          </div>
-
-          <div class="panel__section">
-            <h3>Blackout dates</h3>
-            <div class="panel-cards">
-              <div class="panel-card">
-                <div class="panel-card__title">Selected date</div>
-                <div id="blackoutStatus" class="muted small">Select a date to manage blackouts.</div>
-                <button id="addBlackout" class="ghost-btn">Add blackout</button>
-              </div>
-              <div class="panel-card">
-                <div class="panel-card__title">All blackouts</div>
-                <div id="blackoutList" class="event-list"></div>
-              </div>
-            </div>
-          </div>
-        </aside>
       </main>
     </div>
 
@@ -156,8 +101,14 @@
             <input type="color" id="colorInput" value="#2b8cff" />
           </label>
           <div class="modal__actions">
-            <button type="button" id="deleteEvent" class="ghost-btn hidden">
-              Delete
+            <button
+              type="button"
+              id="deleteEvent"
+              class="ghost-btn hidden"
+              aria-label="Delete event"
+              title="Delete event"
+            >
+              🗑
             </button>
             <button type="submit" class="primary-btn">Save</button>
           </div>
@@ -188,6 +139,52 @@
           have a <code>date</code> or a <code>dates</code> array of date entries (each entry needs
           <code>date</code>, <code>type</code>, and status fields).
         </p>
+      </div>
+    </div>
+
+    <div id="createModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>New</h3>
+          <button class="icon-btn" id="closeCreateModal" aria-label="Close">✕</button>
+        </div>
+        <div class="choice-grid">
+          <button id="createEvent" class="choice-btn">New event</button>
+          <button id="createBlackout" class="choice-btn">New blackout date</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="blackoutModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>New blackout</h3>
+          <button class="icon-btn" id="closeBlackoutModal" aria-label="Close">✕</button>
+        </div>
+        <label>
+          Date
+          <input type="date" id="blackoutDateInput" />
+        </label>
+        <div class="modal__actions">
+          <button id="confirmBlackout" class="primary-btn">Add blackout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dayModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3 id="dayModalTitle">Day details</h3>
+          <button class="icon-btn" id="closeDayModal" aria-label="Close">✕</button>
+        </div>
+        <div class="day-meta">
+          <span id="dayModalIso" class="muted small"></span>
+          <button id="toggleBlackout" class="ghost-btn">Add blackout</button>
+        </div>
+        <div id="dayEventList" class="day-list"></div>
       </div>
     </div>
 

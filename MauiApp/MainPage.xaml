@@ -3,10 +3,17 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="SimpleEventsCalenderApp.MainPage">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Export"
-                     Clicked="OnExportClicked" />
-    </ContentPage.ToolbarItems>
+    <ContentPage.MenuBarItems>
+        <MenuBarItem Text="File">
+            <MenuFlyoutItem Text="New calendar" Clicked="OnNewCalendarClicked" />
+            <MenuFlyoutItem Text="Open..." Clicked="OnOpenClicked" />
+            <MenuFlyoutItem Text="Save..." Clicked="OnSaveClicked" />
+        </MenuBarItem>
+        <MenuBarItem Text="New">
+            <MenuFlyoutItem Text="Event" Clicked="OnNewEventClicked" />
+            <MenuFlyoutItem Text="Blackout date" Clicked="OnNewBlackoutClicked" />
+        </MenuBarItem>
+    </ContentPage.MenuBarItems>
 
     <HybridWebView x:Name="WebView"
                    HybridRoot="wwwroot"
