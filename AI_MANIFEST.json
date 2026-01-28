@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "storage": {
+    "key": "event-loom-events",
+    "blackoutKey": "event-loom-blackouts"
+  },
+  "schemas": {
+    "event": {
+      "id": "string (uuid)",
+      "title": "string",
+      "dates": "dateEntry[]"
+    },
+    "dateEntry": {
+      "date": "YYYY-MM-DD",
+      "type": "vendor | performer | both",
+      "statusVendor": "contacted | submitted | pending | confirmed | rejected",
+      "statusPerformer": "contacted | submitted | pending | confirmed | rejected",
+      "color": "hex color"
+    }
+  },
+  "invariants": [
+    "Each event must have at least one dateEntry",
+    "Each dateEntry must have a valid YYYY-MM-DD date",
+    "Type is vendor/performer/both",
+    "Status values are confirmed/pending",
+    "At least one of vendor/performer is active per dateEntry",
+    "Blackout dates prevent scheduling and selection",
+    "Only one confirmed event per date"
+  ],
+  "ui": {
+    "calendarRootId": "calendar",
+    "yearLabelId": "yearLabel",
+    "eventListId": "eventList",
+    "modalId": "eventModal",
+    "multiDateGridId": "multiDateGrid"
+  },
+  "rendering": {
+    "dayMarker": "A single circle per day; split for both; bottom half uses pending color"
+  }
+}

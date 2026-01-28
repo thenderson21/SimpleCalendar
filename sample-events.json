@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Arkansas Renaissance Festival",
+    "dates": [
+      {
+        "date": "2026-09-05",
+        "type": "vendor",
+        "statusVendor": "confirmed",
+        "statusPerformer": "pending"
+      },
+      {
+        "date": "2026-09-06",
+        "type": "both",
+        "statusVendor": "confirmed",
+        "statusPerformer": "confirmed"
+      }
+    ]
+  },
+  {
+    "title": "Whip Comedy Show",
+    "dates": [
+      {
+        "date": "2026-04-18",
+        "type": "performer",
+        "statusVendor": "pending",
+        "statusPerformer": "confirmed"
+      }
+    ]
+  }
+]

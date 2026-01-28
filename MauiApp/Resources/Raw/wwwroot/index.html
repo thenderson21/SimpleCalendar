@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Events Calendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand__title">Event Loom</span>
+          <span class="brand__subtitle">Year Planner</span>
+        </div>
+        <div class="controls">
+          <button id="prevYear" class="icon-btn" aria-label="Previous year">◀</button>
+          <div class="year" id="yearLabel">2026</div>
+          <button id="nextYear" class="icon-btn" aria-label="Next year">▶</button>
+          <button id="todayBtn" class="ghost-btn">Today</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="calendar" id="calendar"></section>
+
+        <aside class="panel">
+          <div class="panel__section">
+            <h2 id="selectedDateLabel">Select a day</h2>
+            <div id="dayMeta" class="muted">Click a date to manage events.</div>
+          </div>
+
+          <div class="panel__section">
+            <h3>Events</h3>
+            <div id="eventList" class="event-list"></div>
+            <button id="clearEvents" class="ghost-btn">Clear all events</button>
+          </div>
+
+          <div class="panel__section">
+            <h3>Add event</h3>
+            <button id="openAddEvent" class="primary-btn">Add event</button>
+          </div>
+
+          <div class="panel__section">
+            <h3>Import / Export</h3>
+            <button id="openImportModal" class="ghost-btn">Open import/export</button>
+          </div>
+
+          <div class="panel__section legend">
+            <h3>Legend</h3>
+            <div class="legend__row">
+              <span class="legend-swatch vendor"></span>
+              <span>Vendor (bottom half = pending)</span>
+            </div>
+            <div class="legend__row">
+              <span class="legend-swatch performer"></span>
+              <span>Performer (bottom half = pending)</span>
+            </div>
+            <div class="legend__row">
+              <span class="legend-swatch split"></span>
+              <span>Both (split circle)</span>
+            </div>
+          </div>
+
+          <div class="panel__section">
+            <h3>Blackout dates</h3>
+            <div class="panel-cards">
+              <div class="panel-card">
+                <div class="panel-card__title">Selected date</div>
+                <div id="blackoutStatus" class="muted small">Select a date to manage blackouts.</div>
+                <button id="addBlackout" class="ghost-btn">Add blackout</button>
+              </div>
+              <div class="panel-card">
+                <div class="panel-card__title">All blackouts</div>
+                <div id="blackoutList" class="event-list"></div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <div id="eventModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3 id="modalTitle">Add event</h3>
+          <button class="icon-btn" id="closeModal" aria-label="Close">✕</button>
+        </div>
+        <form id="eventForm" class="form">
+          <input type="hidden" id="eventId" />
+          <div class="form-block">
+            <span class="form-label">Dates</span>
+            <div class="multi-date">
+              <div class="multi-date__header">
+                <button type="button" id="prevMonth" class="icon-btn" aria-label="Previous month">◀</button>
+                <div id="monthLabel" class="multi-date__title">September 2026</div>
+                <button type="button" id="nextMonth" class="icon-btn" aria-label="Next month">▶</button>
+              </div>
+              <div class="multi-date__weekdays">
+                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+              </div>
+              <div id="multiDateGrid" class="multi-date__grid"></div>
+              <div class="multi-date__footer">
+                <span id="selectedDatesLabel" class="muted small">No dates selected</span>
+                <button type="button" id="clearDates" class="ghost-btn">Clear</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="dateInput" />
+          <label>
+            Title
+            <input type="text" id="titleInput" required placeholder="Artist showcase" />
+          </label>
+          <label>
+            Type
+            <div class="type-toggle">
+              <label class="check">
+                <input type="checkbox" id="vendorCheck" />
+                Vendor
+              </label>
+              <label class="check">
+                <input type="checkbox" id="performerCheck" />
+                Performer
+              </label>
+            </div>
+          </label>
+          <label>
+            Status
+            <select id="statusVendorInput">
+              <option value="contacted">Contacted</option>
+              <option value="submitted">Application submitted</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>
+            Performer Status
+            <select id="statusPerformerInput">
+              <option value="contacted">Contacted</option>
+              <option value="submitted">Application submitted</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>
+            Color
+            <input type="color" id="colorInput" value="#2b8cff" />
+          </label>
+          <div class="modal__actions">
+            <button type="button" id="deleteEvent" class="ghost-btn hidden">
+              Delete
+            </button>
+            <button type="submit" class="primary-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="importModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Import / Export</h3>
+          <button class="icon-btn" id="closeImportModal" aria-label="Close">✕</button>
+        </div>
+        <div class="importer">
+          <input type="file" id="importInput" accept="application/json" />
+          <button id="importBtn" class="ghost-btn">Import</button>
+        </div>
+        <div class="importer">
+          <button id="exportBtn" class="ghost-btn">Export JSON</button>
+        </div>
+        <div id="exportBox" class="export-box hidden">
+          <textarea id="exportText" rows="6" readonly></textarea>
+          <button id="copyExport" class="ghost-btn">Copy JSON</button>
+        </div>
+        <p class="muted small">
+          Accepts an array of events or an object with an <code>events</code> array. Each event can
+          have a <code>date</code> or a <code>dates</code> array of date entries (each entry needs
+          <code>date</code>, <code>type</code>, and status fields).
+        </p>
+      </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
