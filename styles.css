@@ -9,6 +9,7 @@
   --accent: #f2a341;
   --vendor: #2b8cff;
   --performer: #ff6a88;
+  --count: #ff6a88;
   --both: #38d39f;
   --pending: #f0c452;
   --blackout: #b55454;
@@ -28,6 +29,7 @@
     --accent: #ffb74a;
     --vendor: #2b8cff;
     --performer: #ff6a88;
+    --count: #ff6a88;
     --both: #38d39f;
     --pending: #f7d060;
     --blackout: #f4a3a3;
@@ -147,6 +149,15 @@ body {
   place-items: center;
 }
 
+.settings-btn {
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -234,21 +245,27 @@ body {
 }
 
 .day--blackout {
-  border-color: var(--blackout-soft);
+  border-color: transparent;
 }
 
-.day--blackout::before,
-.day--blackout::after {
+.day--blackout .day__number-wrap::before {
   content: "";
   position: absolute;
-  inset: 4px;
-  border-radius: 6px;
-  border-top: 1px solid var(--blackout);
-  transform: rotate(45deg);
+  inset: -3px;
+  border-radius: 999px;
+  border: 2px solid var(--blackout);
 }
 
 .day--blackout::after {
-  transform: rotate(-45deg);
+  content: "X";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  color: var(--blackout);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .day__number {
@@ -282,7 +299,7 @@ body {
   height: 16px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--performer);
+  background: var(--count);
   color: #0c0f14;
   font-size: 10px;
   line-height: 16px;
@@ -400,22 +417,55 @@ body {
 }
 
 .type-toggle-btn {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 11px;
+  padding: 6px 12px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.6px;
   cursor: pointer;
   font-family: inherit;
-  background: transparent;
-  color: var(--muted);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  min-width: 90px;
 }
 
 .type-toggle-btn.active {
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+.type-toggle-btn.active[data-role="vendor"] {
+  background: var(--vendor);
+}
+
+.type-toggle-btn.active[data-role="performer"] {
+  background: var(--performer);
+}
+
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.color-row input[type="color"] {
+  width: 52px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.color-row input[type="text"] {
+  flex: 1;
+  font-family: inherit;
+  border-radius: 10px;
+  border: 1px solid rgba(27, 34, 51, 0.2);
+  background: var(--soft);
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.08);
+  padding: 8px 10px;
 }
 
 .status-pill.confirmed {
@@ -430,7 +480,7 @@ body {
 
 .status-select {
   background: var(--soft);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(27, 34, 51, 0.2);
   color: var(--text);
   border-radius: 10px;
   padding: 4px 8px;
@@ -441,78 +491,30 @@ body {
 }
 
 .status-select.contacted {
-  background: rgba(122, 167, 255, 0.2);
-  color: #a8c4ff;
+  background: rgba(43, 140, 255, 0.2);
+  color: #1b2233;
 }
 
 .status-select.submitted {
-  background: rgba(255, 183, 74, 0.2);
-  color: #ffcd8a;
+  background: rgba(255, 183, 74, 0.35);
+  color: #1b2233;
 }
 
 .status-select.pending {
-  background: rgba(247, 208, 96, 0.2);
-  color: #f7d060;
+  background: rgba(247, 208, 96, 0.35);
+  color: #1b2233;
 }
 
 .status-select.confirmed {
-  background: rgba(56, 211, 159, 0.2);
-  color: #9ef3d2;
+  background: rgba(56, 211, 159, 0.35);
+  color: #1b2233;
 }
 
 .status-select.rejected {
-  background: rgba(255, 106, 136, 0.2);
-  color: #ff9db1;
+  background: rgba(255, 106, 136, 0.35);
+  color: #1b2233;
 }
 
-.status-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.status-btn {
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 4px 8px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--muted);
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.status-btn.active {
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.status-btn.status-contacted.active {
-  background: rgba(122, 167, 255, 0.25);
-  color: #a8c4ff;
-}
-
-.status-btn.status-submitted.active {
-  background: rgba(255, 183, 74, 0.25);
-  color: #ffcd8a;
-}
-
-.status-btn.status-pending.active {
-  background: rgba(247, 208, 96, 0.25);
-  color: #f7d060;
-}
-
-.status-btn.status-confirmed.active {
-  background: rgba(56, 211, 159, 0.25);
-  color: #9ef3d2;
-}
-
-.status-btn.status-rejected.active {
-  background: rgba(255, 106, 136, 0.25);
-  color: #ff9db1;
-}
 
 .badge {
   font-size: 11px;
@@ -809,6 +811,13 @@ body {
   gap: 10px;
 }
 
+.day-meta__label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+
 .day-list {
   display: grid;
   gap: 10px;
@@ -841,6 +850,52 @@ body {
   display: grid;
   gap: 8px;
 }
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle__track {
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid rgba(27, 34, 51, 0.2);
+  position: relative;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.toggle__track::after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.toggle input:checked + .toggle__track {
+  background: var(--blackout);
+  border-color: var(--blackout);
+}
+
+.toggle input:checked + .toggle__track::after {
+  transform: translateX(20px);
+}
+
 
 @media (max-width: 1100px) {
   .layout {

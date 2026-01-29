@@ -4,14 +4,16 @@
              x:Class="SimpleEventsCalenderApp.MainPage">
 
     <ContentPage.MenuBarItems>
+        <MenuBarItem Text="Application">
+            <MenuFlyoutItem Text="Settings..." Clicked="OnSettingsClicked" Shortcut="CmdOrCtrl+," />
+        </MenuBarItem>
         <MenuBarItem Text="File">
-            <MenuFlyoutItem Text="New calendar" Clicked="OnNewCalendarClicked" />
+            <MenuFlyoutItem Text="New Calendar" Clicked="OnNewCalendarClicked" />
+            <MenuFlyoutItem Text="New Event" Clicked="OnNewEventClicked" />
+            <MenuFlyoutItem Text="New Blackout Date" Clicked="OnNewBlackoutClicked" />
+            <MenuFlyoutSeparator />
             <MenuFlyoutItem Text="Open..." Clicked="OnOpenClicked" />
             <MenuFlyoutItem Text="Save..." Clicked="OnSaveClicked" />
-        </MenuBarItem>
-        <MenuBarItem Text="New">
-            <MenuFlyoutItem Text="Event" Clicked="OnNewEventClicked" />
-            <MenuFlyoutItem Text="Blackout date" Clicked="OnNewBlackoutClicked" />
         </MenuBarItem>
     </ContentPage.MenuBarItems>
 

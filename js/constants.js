@@ -1,5 +1,6 @@
 export const STORAGE_KEY = "event-loom-events";
 export const BLACKOUT_KEY = "event-loom-blackouts";
+export const SETTINGS_KEY = "event-loom-settings";
 
 export const weekdayLabels = ["S", "M", "T", "W", "T", "F", "S"];
 

@@ -21,6 +21,7 @@
           <button id="nextYear" class="icon-btn" aria-label="Next year">▶</button>
           <button id="todayBtn" class="ghost-btn">Today</button>
         </div>
+        <button id="openSettings" class="icon-btn settings-btn" aria-label="Settings">⚙</button>
         <button id="addBtn" class="primary-btn add-btn" aria-label="Add">
           <span>+</span>
         </button>
@@ -68,11 +69,11 @@
             <div class="type-toggle">
               <label class="check">
                 <input type="checkbox" id="vendorCheck" />
-                Vendor
+                <span data-label="vendor">Vendor</span>
               </label>
               <label class="check">
                 <input type="checkbox" id="performerCheck" />
-                Performer
+                <span data-label="performer">Performer</span>
               </label>
             </div>
           </label>
@@ -95,10 +96,6 @@
               <option value="confirmed">Confirmed</option>
               <option value="rejected">Rejected</option>
             </select>
-          </label>
-          <label>
-            Color
-            <input type="color" id="colorInput" value="#2b8cff" />
           </label>
           <div class="modal__actions">
             <button
@@ -163,12 +160,71 @@
           <h3>New blackout</h3>
           <button class="icon-btn" id="closeBlackoutModal" aria-label="Close">✕</button>
         </div>
+        <div class="form-block">
+          <span class="form-label">Dates</span>
+          <div class="multi-date">
+            <div class="multi-date__header">
+              <button type="button" id="blackoutPrevMonth" class="icon-btn" aria-label="Previous month">◀</button>
+              <div id="blackoutMonthLabel" class="multi-date__title">September 2026</div>
+              <button type="button" id="blackoutNextMonth" class="icon-btn" aria-label="Next month">▶</button>
+            </div>
+            <div class="multi-date__weekdays">
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
+            <div id="blackoutDateGrid" class="multi-date__grid"></div>
+            <div class="multi-date__footer">
+              <span id="blackoutSelectedLabel" class="muted small">No dates selected</span>
+              <button type="button" id="blackoutClearDates" class="ghost-btn">Clear</button>
+            </div>
+          </div>
+        </div>
         <label>
-          Date
-          <input type="date" id="blackoutDateInput" />
+          Title
+          <input type="text" id="blackoutTitleInput" placeholder="Holiday break" />
+        </label>
+        <label>
+          Notes
+          <textarea id="blackoutNotesInput" rows="3" placeholder="Optional notes"></textarea>
         </label>
         <div class="modal__actions">
-          <button id="confirmBlackout" class="primary-btn">Add blackout</button>
+          <button id="confirmBlackout" class="primary-btn">Save blackout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settingsModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Settings</h3>
+          <button class="icon-btn" id="closeSettingsModal" aria-label="Close">✕</button>
+        </div>
+        <div class="form">
+          <label>
+            Vendor label
+            <input type="text" id="vendorLabelInput" />
+          </label>
+          <label>
+            Vendor color
+            <div class="color-row">
+              <input type="color" id="vendorColorInput" />
+              <input type="text" id="vendorColorText" placeholder="#2b8cff" />
+            </div>
+          </label>
+          <label>
+            Performer label
+            <input type="text" id="performerLabelInput" />
+          </label>
+          <label>
+            Performer color
+            <div class="color-row">
+              <input type="color" id="performerColorInput" />
+              <input type="text" id="performerColorText" placeholder="#ff6a88" />
+            </div>
+          </label>
+          <div class="modal__actions">
+            <button id="saveSettings" class="primary-btn">Save</button>
+          </div>
         </div>
       </div>
     </div>
@@ -181,10 +237,27 @@
           <button class="icon-btn" id="closeDayModal" aria-label="Close">✕</button>
         </div>
         <div class="day-meta">
-          <span id="dayModalIso" class="muted small"></span>
-          <button id="toggleBlackout" class="ghost-btn">Add blackout</button>
+          <span class="day-meta__label">Blackout</span>
+          <label class="toggle">
+            <input id="toggleBlackout" type="checkbox" />
+            <span class="toggle__track"></span>
+          </label>
         </div>
         <div id="dayEventList" class="day-list"></div>
+      </div>
+    </div>
+
+    <div id="blackoutPickModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Add blackout to</h3>
+          <button class="icon-btn" id="closeBlackoutPick" aria-label="Close">✕</button>
+        </div>
+        <div id="blackoutPickList" class="day-list"></div>
+        <div class="modal__actions">
+          <button id="createNewBlackoutGroup" class="primary-btn">New blackout group</button>
+        </div>
       </div>
     </div>
 

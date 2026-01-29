@@ -7,6 +7,14 @@ namespace SimpleEventsCalenderApp;
 
 public partial class MainPage : ContentPage
 {
+	private static readonly FilePickerFileType CalendarFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
+	{
+		{ DevicePlatform.MacCatalyst, new[] { "com.simpleeventscalendar.sevc" } },
+		{ DevicePlatform.iOS, new[] { "com.simpleeventscalendar.sevc" } },
+		{ DevicePlatform.WinUI, new[] { ".sevc" } },
+		{ DevicePlatform.Android, new[] { "application/vnd.simpleeventscalendar+json" } },
+	});
+
 	public MainPage()
 	{
 		InitializeComponent();
@@ -57,7 +65,7 @@ public partial class MainPage : ContentPage
 
 			var bytes = Encoding.UTF8.GetBytes(json);
 			await using var stream = new MemoryStream(bytes);
-			var result = await FileSaver.Default.SaveAsync("events-export.json", stream);
+			var result = await FileSaver.Default.SaveAsync("calendar.sevc", stream);
 			if (!result.IsSuccessful)
 			{
 				await DisplayAlert("Save", "Save canceled or failed.", "OK");
@@ -73,7 +81,11 @@ public partial class MainPage : ContentPage
 	{
 		try
 		{
-			var result = await FilePicker.Default.PickAsync();
+			var result = await FilePicker.Default.PickAsync(new PickOptions
+			{
+				FileTypes = CalendarFileType,
+				PickerTitle = "Open Calendar"
+			});
 			if (result == null)
 			{
 				return;
@@ -117,5 +129,18 @@ public partial class MainPage : ContentPage
 	private async void OnNewBlackoutClicked(object? sender, EventArgs e)
 	{
 		await WebView.EvaluateJavaScriptAsync("window.__APP__?.openNewBlackout?.();");
+	}
+
+	private async void OnSettingsClicked(object? sender, EventArgs e)
+	{
+		await WebView.EvaluateJavaScriptAsync("document.getElementById('openSettings')?.click();");
+	}
+
+	private async void OnHelpClicked(object? sender, EventArgs e)
+	{
+		await DisplayAlert(
+			"Help",
+			"Use File → New to add events or blackout dates. Use File → Open/Save to manage calendar files.",
+			"OK");
 	}
 }
