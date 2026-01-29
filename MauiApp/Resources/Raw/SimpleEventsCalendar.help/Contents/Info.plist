@@ -23,6 +23,6 @@
     <key>HPDBookTitle</key>
     <string>Simple Events Calendar Help</string>
     <key>HPDBookAccessPath</key>
-    <string>index.html</string>
+    <string>English.lproj/SimpleEventsCalendar.html</string>
 </dict>
 </plist>

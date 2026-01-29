@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Events Calendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="controls">
+          <button id="prevYear" class="icon-btn" aria-label="Previous year">◀</button>
+          <div class="year" id="yearLabel">2026</div>
+          <button id="nextYear" class="icon-btn" aria-label="Next year">▶</button>
+          <button id="todayBtn" class="ghost-btn">Today</button>
+        </div>
+        <button id="openSettings" class="icon-btn settings-btn" aria-label="Settings">⚙</button>
+        <button id="addBtn" class="primary-btn add-btn" aria-label="Add">
+          <span>+</span>
+        </button>
+      </header>
+
+      <main class="layout">
+        <section class="calendar" id="calendar"></section>
+      </main>
+    </div>
+
+    <div id="eventModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3 id="modalTitle">Add event</h3>
+          <button class="icon-btn" id="closeModal" aria-label="Close">✕</button>
+        </div>
+        <form id="eventForm" class="form">
+          <input type="hidden" id="eventId" />
+          <div class="form-block">
+            <span class="form-label">Dates</span>
+            <div class="multi-date">
+              <div class="multi-date__header">
+                <button type="button" id="prevMonth" class="icon-btn" aria-label="Previous month">◀</button>
+                <div id="monthLabel" class="multi-date__title">September 2026</div>
+                <button type="button" id="nextMonth" class="icon-btn" aria-label="Next month">▶</button>
+              </div>
+              <div class="multi-date__weekdays">
+                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+              </div>
+              <div id="multiDateGrid" class="multi-date__grid"></div>
+              <div class="multi-date__footer">
+                <span id="selectedDatesLabel" class="muted small">No dates selected</span>
+                <button type="button" id="clearDates" class="ghost-btn">Clear</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="dateInput" />
+          <label>
+            Title
+            <input type="text" id="titleInput" required placeholder="Artist showcase" />
+          </label>
+          <label>
+            Type
+            <div class="type-toggle">
+              <label class="check">
+                <input type="checkbox" id="vendorCheck" />
+                <span data-label="vendor">Vendor</span>
+              </label>
+              <label class="check">
+                <input type="checkbox" id="performerCheck" />
+                <span data-label="performer">Performer</span>
+              </label>
+            </div>
+          </label>
+          <label>
+            Status
+            <select id="statusVendorInput">
+              <option value="contacted">Contacted</option>
+              <option value="submitted">Application submitted</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>
+            Performer Status
+            <select id="statusPerformerInput">
+              <option value="contacted">Contacted</option>
+              <option value="submitted">Application submitted</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <div class="modal__actions">
+            <button
+              type="button"
+              id="deleteEvent"
+              class="ghost-btn hidden"
+              aria-label="Delete event"
+              title="Delete event"
+            >
+              🗑
+            </button>
+            <button type="submit" class="primary-btn">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="importModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Import / Export</h3>
+          <button class="icon-btn" id="closeImportModal" aria-label="Close">✕</button>
+        </div>
+        <div class="importer">
+          <input type="file" id="importInput" accept="application/json" />
+          <button id="importBtn" class="ghost-btn">Import</button>
+        </div>
+        <div class="importer">
+          <button id="exportBtn" class="ghost-btn">Export JSON</button>
+        </div>
+        <div id="exportBox" class="export-box hidden">
+          <textarea id="exportText" rows="6" readonly></textarea>
+          <button id="copyExport" class="ghost-btn">Copy JSON</button>
+        </div>
+        <p class="muted small">
+          Accepts an array of events or an object with an <code>events</code> array. Each event can
+          have a <code>date</code> or a <code>dates</code> array of date entries (each entry needs
+          <code>date</code>, <code>type</code>, and status fields).
+        </p>
+      </div>
+    </div>
+
+    <div id="createModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>New</h3>
+          <button class="icon-btn" id="closeCreateModal" aria-label="Close">✕</button>
+        </div>
+        <div class="choice-grid">
+          <button id="createEvent" class="choice-btn">New event</button>
+          <button id="createBlackout" class="choice-btn">New blackout date</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="blackoutModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>New blackout</h3>
+          <button class="icon-btn" id="closeBlackoutModal" aria-label="Close">✕</button>
+        </div>
+        <div class="form-block">
+          <span class="form-label">Dates</span>
+          <div class="multi-date">
+            <div class="multi-date__header">
+              <button type="button" id="blackoutPrevMonth" class="icon-btn" aria-label="Previous month">◀</button>
+              <div id="blackoutMonthLabel" class="multi-date__title">September 2026</div>
+              <button type="button" id="blackoutNextMonth" class="icon-btn" aria-label="Next month">▶</button>
+            </div>
+            <div class="multi-date__weekdays">
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
+            <div id="blackoutDateGrid" class="multi-date__grid"></div>
+            <div class="multi-date__footer">
+              <span id="blackoutSelectedLabel" class="muted small">No dates selected</span>
+              <button type="button" id="blackoutClearDates" class="ghost-btn">Clear</button>
+            </div>
+          </div>
+        </div>
+        <label>
+          Title
+          <input type="text" id="blackoutTitleInput" placeholder="Holiday break" />
+        </label>
+        <label>
+          Notes
+          <textarea id="blackoutNotesInput" rows="3" placeholder="Optional notes"></textarea>
+        </label>
+        <div class="modal__actions">
+          <button id="confirmBlackout" class="primary-btn">Save blackout</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="settingsModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Settings</h3>
+          <button class="icon-btn" id="closeSettingsModal" aria-label="Close">✕</button>
+        </div>
+        <div class="form">
+          <label>
+            Vendor label
+            <input type="text" id="vendorLabelInput" />
+          </label>
+          <label>
+            Vendor color
+            <div class="color-row">
+              <input type="color" id="vendorColorInput" />
+              <input type="text" id="vendorColorText" placeholder="#2b8cff" />
+            </div>
+          </label>
+          <label>
+            Performer label
+            <input type="text" id="performerLabelInput" />
+          </label>
+          <label>
+            Performer color
+            <div class="color-row">
+              <input type="color" id="performerColorInput" />
+              <input type="text" id="performerColorText" placeholder="#ff6a88" />
+            </div>
+          </label>
+          <div class="modal__actions">
+            <button id="saveSettings" class="primary-btn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dayModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3 id="dayModalTitle">Day details</h3>
+          <button class="icon-btn" id="closeDayModal" aria-label="Close">✕</button>
+        </div>
+        <div class="day-meta">
+          <span class="day-meta__label">Blackout</span>
+          <label class="toggle">
+            <input id="toggleBlackout" type="checkbox" />
+            <span class="toggle__track"></span>
+          </label>
+        </div>
+        <div id="dayEventList" class="day-list"></div>
+      </div>
+    </div>
+
+    <div id="blackoutPickModal" class="modal hidden" aria-hidden="true" role="dialog">
+      <div class="modal__backdrop" data-close="true"></div>
+      <div class="modal__content">
+        <div class="modal__header">
+          <h3>Add blackout to</h3>
+          <button class="icon-btn" id="closeBlackoutPick" aria-label="Close">✕</button>
+        </div>
+        <div id="blackoutPickList" class="day-list"></div>
+        <div class="modal__actions">
+          <button id="createNewBlackoutGroup" class="primary-btn">New blackout group</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>

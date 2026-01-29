@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simple Events Calendar Help</title>
+  <style>
+    :root{
+      color-scheme: light dark;
+      --ink:#1f2937;
+      --muted:#6b7280;
+      --card:#f3f4f6;
+    }
+    @media (prefers-color-scheme: dark){
+      :root{--ink:#e5e7eb;--muted:#9ca3af;--card:#111827;}
+    }
+    body{font-family:-apple-system,system-ui,Segoe UI,Helvetica,Arial,sans-serif;margin:32px;line-height:1.55;color:var(--ink)}
+    h1{font-size:28px;margin:0 0 10px 0}
+    h2{margin-top:28px;font-size:20px}
+    h3{margin-top:18px;font-size:16px}
+    p{margin:8px 0}
+    ul{margin:8px 0 8px 20px}
+    code{background:var(--card);padding:2px 6px;border-radius:4px}
+    .note{background:var(--card);padding:10px 12px;border-radius:8px;margin:12px 0}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <h1>Simple Events Calendar Help</h1>
+  <p class="muted">A lightweight yearly planner for events and blackout dates.</p>
+
+  <h2>Quick start</h2>
+  <ul>
+    <li>Use <code>File → New Event</code> to add a new event and pick one or more dates.</li>
+    <li>Use <code>File → New Blackout Date</code> to create a blackout group and select dates.</li>
+    <li>Click any day in the calendar to view and edit its events and blackout groups.</li>
+  </ul>
+
+  <h2>Calendar navigation</h2>
+  <ul>
+    <li>Use the year selector to move between years.</li>
+    <li>Today is highlighted. Blackout dates show a red ring and a bold X.</li>
+  </ul>
+
+  <h2>Events</h2>
+  <h3>Create an event</h3>
+  <ul>
+    <li>Choose <code>File → New Event</code>.</li>
+    <li>Enter a title, optional notes, and select one or more dates.</li>
+    <li>Set the type (Vendor or Performer) and the status for each.</li>
+  </ul>
+
+  <h3>Edit an event</h3>
+  <ul>
+    <li>Click a day, then use the edit icon next to the event.</li>
+    <li>Update title, notes, dates, type, or status and save.</li>
+  </ul>
+
+  <h2>Blackout dates</h2>
+  <h3>Blackout groups</h3>
+  <ul>
+    <li>Blackout dates are stored in groups with a title and notes.</li>
+    <li>Create a group from <code>File → New Blackout Date</code>.</li>
+    <li>Select one or more dates in the blackout picker.</li>
+  </ul>
+
+  <h3>Editing blackout dates</h3>
+  <ul>
+    <li>Click a day and toggle the Blackout switch to add/remove that date.</li>
+    <li>If the date is not part of a group yet, you can pick an existing group or create a new one.</li>
+  </ul>
+
+  <div class="note">
+    <strong>Conflicts:</strong> If you schedule an event on a blackout date (or add a blackout date that overlaps an event), the app asks for confirmation.
+  </div>
+
+  <h2>Menus and file actions</h2>
+  <ul>
+    <li><code>File → New Calendar</code> clears all events and blackout dates.</li>
+    <li><code>File → Open...</code> opens a <code>.sevc</code> calendar file.</li>
+    <li><code>File → Save...</code> saves the current calendar as a <code>.sevc</code> file.</li>
+  </ul>
+
+  <h2>Import / Export</h2>
+  <ul>
+    <li>Import and Export JSON are intended for sharing or backup.</li>
+    <li>Exported JSON contains events and blackout groups (and may omit settings depending on the format).</li>
+  </ul>
+
+  <h2>Settings</h2>
+  <ul>
+    <li>Use the Settings menu to customize Vendor and Performer labels and colors.</li>
+    <li>Settings are stored in the calendar file when using <code>.sevc</code>.</li>
+  </ul>
+
+  <h2>Troubleshooting</h2>
+  <ul>
+    <li>If Help doesn’t open, rebuild the app to ensure the help bundle is packaged.</li>
+    <li>If a file doesn’t open, confirm it has the <code>.sevc</code> extension.</li>
+  </ul>
+</body>
+</html>
