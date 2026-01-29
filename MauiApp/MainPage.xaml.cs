@@ -20,6 +20,24 @@ public partial class MainPage : ContentPage
 	{
 		InitializeComponent();
 		WebView.SetInvokeJavaScriptTarget(new HybridBridge(this));
+		ConfigureMenuShortcuts();
+	}
+
+	private void ConfigureMenuShortcuts()
+	{
+#if WINDOWS || MACCATALYST
+		var modifiers = KeyboardAcceleratorModifiers.None;
+#if WINDOWS
+		modifiers = KeyboardAcceleratorModifiers.Control;
+#elif MACCATALYST
+		modifiers = KeyboardAcceleratorModifiers.Command;
+#endif
+		SettingsMenuItem.KeyboardAccelerators.Add(new KeyboardAccelerator
+		{
+			Key = ",",
+			Modifiers = modifiers
+		});
+#endif
 	}
 
 	private sealed class HybridBridge
@@ -47,9 +65,14 @@ public partial class MainPage : ContentPage
 			}
 			catch (Exception ex)
 			{
-				await _page.DisplayAlert("Import", ex.Message, "OK");
+				await _page.DisplayAlertAsync("Import", ex.Message, "OK");
 				return null;
 			}
+		}
+
+		public Task<string> GetDeviceIdiom()
+		{
+			return Task.FromResult(DeviceInfo.Idiom.ToString());
 		}
 	}
 
@@ -60,7 +83,7 @@ public partial class MainPage : ContentPage
 			var json = await WebView.EvaluateJavaScriptAsync("window.__APP__?.exportState?.()");
 			if (string.IsNullOrWhiteSpace(json))
 			{
-				await DisplayAlert("Save", "No data to save.", "OK");
+				await DisplayAlertAsync("Save", "No data to save.", "OK");
 				return;
 			}
 
@@ -76,12 +99,12 @@ public partial class MainPage : ContentPage
 			var result = await FileSaver.Default.SaveAsync("calendar.sevc", stream);
 			if (!result.IsSuccessful)
 			{
-				await DisplayAlert("Save", "Save canceled or failed.", "OK");
+				await DisplayAlertAsync("Save", "Save canceled or failed.", "OK");
 			}
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlert("Save", ex.Message, "OK");
+			await DisplayAlertAsync("Save", ex.Message, "OK");
 		}
 	}
 
@@ -113,7 +136,7 @@ public partial class MainPage : ContentPage
 			var content = await reader.ReadToEndAsync();
 			if (string.IsNullOrWhiteSpace(content))
 			{
-				await DisplayAlert("Open", "File is empty.", "OK");
+				await DisplayAlertAsync("Open", "File is empty.", "OK");
 				return;
 			}
 
@@ -121,13 +144,13 @@ public partial class MainPage : ContentPage
 		}
 		catch (Exception ex)
 		{
-			await DisplayAlert("Open", ex.Message, "OK");
+			await DisplayAlertAsync("Open", ex.Message, "OK");
 		}
 	}
 
 	private async void OnNewCalendarClicked(object? sender, EventArgs e)
 	{
-		var confirmed = await DisplayAlert("New Calendar", "Clear all events and blackouts?", "Clear", "Cancel");
+		var confirmed = await DisplayAlertAsync("New Calendar", "Clear all events and blackouts?", "Clear", "Cancel");
 		if (!confirmed)
 		{
 			return;

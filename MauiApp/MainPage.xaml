@@ -5,7 +5,7 @@
 
     <ContentPage.MenuBarItems>
         <MenuBarItem Text="Application">
-            <MenuFlyoutItem Text="Settings..." Clicked="OnSettingsClicked" Shortcut="CmdOrCtrl+," />
+            <MenuFlyoutItem x:Name="SettingsMenuItem" Text="Settings..." Clicked="OnSettingsClicked" />
         </MenuBarItem>
         <MenuBarItem Text="File">
             <MenuFlyoutItem Text="New Calendar" Clicked="OnNewCalendarClicked" />

@@ -81,12 +81,39 @@ const saveSettingsBtn = document.getElementById("saveSettings");
 
 const isHybrid = Boolean(window?.HybridWebView?.InvokeDotNet);
 
+function isDesktopUserAgent() {
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  return /Macintosh|MacIntel|MacPPC|Mac68K/.test(ua) || /Mac/.test(platform);
+}
+
+function applyDesktopIdiom(isDesktop, idiomValue = "") {
+  document.body?.setAttribute("data-idiom", idiomValue);
+  if (!openSettingsBtn) return;
+  if (isDesktop) {
+    openSettingsBtn.classList.add("hidden");
+  } else {
+    openSettingsBtn.classList.remove("hidden");
+  }
+}
+
 if (isHybrid) {
   importInput?.classList.add("hidden");
   if (importBtn) {
     importBtn.textContent = "Choose JSON file";
   }
-  openSettingsBtn?.classList.add("hidden");
+  window.HybridWebView.InvokeDotNet("GetDeviceIdiom")
+    .then((idiom) => {
+      const idiomValue = String(idiom).toLowerCase();
+      const isDesktop = idiomValue.includes("desktop");
+      applyDesktopIdiom(isDesktop, idiomValue);
+    })
+    .catch(() => {
+      const isDesktop = isDesktopUserAgent();
+      if (isDesktop) {
+        applyDesktopIdiom(true, "desktop");
+      }
+    });
 }
 
 let currentYear = new Date().getFullYear();
@@ -336,7 +363,7 @@ function renderBlackoutDatePicker() {
   }
 }
 
-function markerStyleForEntry(entry) {
+function markerColorsForEntry(entry) {
   if (!entry) return null;
 
   const hasVendor = entry.type === "vendor" || entry.type === "both";
@@ -372,7 +399,84 @@ function markerStyleForEntry(entry) {
     bottomRight = performerPending ? pendingColor : performerColor;
   }
 
-  return `conic-gradient(from -90deg, ${topRight} 0 90deg, ${bottomRight} 90deg 180deg, ${bottomLeft} 180deg 270deg, ${topLeft} 270deg 360deg)`;
+  return { topLeft, topRight, bottomLeft, bottomRight };
+}
+
+function markerStyleForEntry(entry) {
+  const colors = markerColorsForEntry(entry);
+  if (!colors) return null;
+  return `conic-gradient(from -90deg, ${colors.topRight} 0 90deg, ${colors.bottomRight} 90deg 180deg, ${colors.bottomLeft} 180deg 270deg, ${colors.topLeft} 270deg 360deg)`;
+}
+
+function resolveCssVar(value) {
+  const match = value.match(/^var\\((--[^)]+)\\)$/);
+  if (!match) return value;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(match[1]);
+  return raw.trim() || value;
+}
+
+function parseHexColor(value) {
+  const hex = value.replace("#", "").trim();
+  if (hex.length === 3) {
+    return {
+      r: parseInt(hex[0] + hex[0], 16),
+      g: parseInt(hex[1] + hex[1], 16),
+      b: parseInt(hex[2] + hex[2], 16),
+    };
+  }
+  if (hex.length === 6) {
+    return {
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16),
+    };
+  }
+  return null;
+}
+
+function relativeLuminance({ r, g, b }) {
+  const normalize = (value) => {
+    const channel = value / 255;
+    return channel <= 0.03928
+      ? channel / 12.92
+      : ((channel + 0.055) / 1.055) ** 2.4;
+  };
+  const red = normalize(r);
+  const green = normalize(g);
+  const blue = normalize(b);
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function contrastRatio(colorA, colorB) {
+  const lumA = relativeLuminance(colorA);
+  const lumB = relativeLuminance(colorB);
+  const lighter = Math.max(lumA, lumB);
+  const darker = Math.min(lumA, lumB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function chooseDayNumberColor(colors) {
+  if (!colors) return null;
+  const values = [
+    colors.topLeft,
+    colors.topRight,
+    colors.bottomLeft,
+    colors.bottomRight,
+  ]
+    .map(resolveCssVar)
+    .filter(Boolean)
+    .map(parseHexColor)
+    .filter(Boolean);
+  if (!values.length) return null;
+
+  const lightText = parseHexColor("#f8fafc");
+  const darkText = parseHexColor("#0c0f14");
+  const minContrast = (textColor) =>
+    Math.min(...values.map((bg) => contrastRatio(textColor, bg)));
+
+  return minContrast(darkText) >= minContrast(lightText)
+    ? "#0c0f14"
+    : "#f8fafc";
 }
 
 function renderCalendar() {
@@ -448,10 +552,15 @@ function renderCalendar() {
               entry.statusVendor === "confirmed" ||
               entry.statusPerformer === "confirmed"
           )?.entry || entries[0]?.entry;
+        const markerColors = markerColorsForEntry(markerEntry);
         const markerStyle = markerStyleForEntry(markerEntry);
         if (markerStyle) {
           marker.style.background = markerStyle;
           dayEl.appendChild(marker);
+        }
+        const numberColor = chooseDayNumberColor(markerColors);
+        if (numberColor) {
+          dayEl.style.setProperty("--day-number-color", numberColor);
         }
 
         if (entries.length > 1) {

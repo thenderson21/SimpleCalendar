@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APP_CSPROJ="$ROOT_DIR/MauiApp/SimpleEventsCalenderApp.csproj"
+TVOS_PLIST="$ROOT_DIR/SimpleEventsCalenderTvOS/Info.plist"
+
+read_csproj_value() {
+  python3 - "$APP_CSPROJ" "$1" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+tag = sys.argv[2]
+text = path.read_text(encoding='utf-8')
+match = re.search(rf"<{tag}>(.*?)</{tag}>", text)
+if not match:
+    raise SystemExit(f"Missing <{tag}> in {path}")
+print(match.group(1).strip())
+PY
+}
+
+read_plist_value() {
+  python3 - "$TVOS_PLIST" "$1" <<'PY'
+import plistlib
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+key = sys.argv[2]
+with path.open('rb') as f:
+    data = plistlib.load(f)
+value = data.get(key)
+if value is None:
+    raise SystemExit(f"Missing {key} in {path}")
+print(value)
+PY
+}
+
+bump_version() {
+  python3 - "$1" <<'PY'
+import sys
+value = sys.argv[1]
+parts = value.split('.')
+if not all(p.isdigit() for p in parts):
+    raise SystemExit(f"Build number must be numeric or dot-delimited: {value}")
+parts[-1] = str(int(parts[-1]) + 1)
+print('.'.join(parts))
+PY
+}
+
+replace_csproj_value() {
+  python3 - "$APP_CSPROJ" "$1" "$2" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+tag = sys.argv[2]
+value = sys.argv[3]
+text = path.read_text(encoding='utf-8')
+pattern = rf"(<{tag}>)(.*?)(</{tag}>)"
+new_text, count = re.subn(pattern, rf"\\1{value}\\3", text)
+if count != 1:
+    raise SystemExit(f"Expected single <{tag}> in {path}, found {count}")
+path.write_text(new_text, encoding='utf-8')
+PY
+}
+
+replace_plist_value() {
+  python3 - "$TVOS_PLIST" "$1" "$2" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+key = sys.argv[2]
+value = sys.argv[3]
+raw = path.read_bytes()
+text = raw.decode('utf-8-sig')
+bom = raw.startswith(b'\xef\xbb\xbf')
+pattern = rf"(<key>{re.escape(key)}</key>\s*<string>)(.*?)(</string>)"
+new_text, count = re.subn(pattern, rf"\\1{value}\\3", text, flags=re.DOTALL)
+if count != 1:
+    raise SystemExit(f"Expected single {key} in {path}, found {count}")
+if bom:
+    path.write_bytes(new_text.encode('utf-8-sig'))
+else:
+    path.write_text(new_text, encoding='utf-8')
+PY
+}
+
+DISPLAY_VERSION="$(read_csproj_value ApplicationDisplayVersion)"
+BUILD_VERSION="$(read_csproj_value ApplicationVersion)"
+TVOS_SHORT_VERSION="$(read_plist_value CFBundleShortVersionString)"
+
+if [[ "$DISPLAY_VERSION" != "$TVOS_SHORT_VERSION" ]]; then
+  echo "Warning: App version ($DISPLAY_VERSION) and tvOS short version ($TVOS_SHORT_VERSION) differ." >&2
+fi
+
+RELEASE_DIR="$ROOT_DIR/releases/${DISPLAY_VERSION}+${BUILD_VERSION}"
+mkdir -p "$RELEASE_DIR"
+
+echo "Publishing Android..."
+dotnet publish "$APP_CSPROJ" -c Release -f net10.0-android -o "$RELEASE_DIR/android"
+
+echo "Publishing iOS..."
+dotnet publish "$APP_CSPROJ" -c Release -f net10.0-ios -o "$RELEASE_DIR/ios"
+
+echo "Publishing Mac Catalyst..."
+dotnet publish "$APP_CSPROJ" -c Release -f net10.0-maccatalyst -o "$RELEASE_DIR/maccatalyst"
+
+echo "Publishing tvOS..."
+dotnet publish "$ROOT_DIR/SimpleEventsCalenderTvOS/SimpleEventsCalenderTvOS.csproj" -c Release -f net10.0-tvos -o "$RELEASE_DIR/tvos"
+
+NEXT_BUILD="$(bump_version "$BUILD_VERSION")"
+
+replace_csproj_value ApplicationVersion "$NEXT_BUILD"
+replace_plist_value CFBundleVersion "$NEXT_BUILD"
+
+echo "Published to $RELEASE_DIR"
+echo "Bumped build number to $NEXT_BUILD"

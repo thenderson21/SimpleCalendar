@@ -25,6 +25,13 @@
     </array>
     <key>XSAppIconAssets</key>
     <string>Assets.xcassets/AppIcon.appiconset</string>
+    <key>TVTopShelfImage</key>
+    <dict>
+        <key>TVTopShelfPrimaryImage</key>
+        <string>TopShelfImage</string>
+        <key>TVTopShelfPrimaryImageWide</key>
+        <string>TopShelfImageWide</string>
+    </dict>
     <key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

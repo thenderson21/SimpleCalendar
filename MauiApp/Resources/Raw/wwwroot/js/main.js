@@ -81,12 +81,39 @@ const saveSettingsBtn = document.getElementById("saveSettings");
 
 const isHybrid = Boolean(window?.HybridWebView?.InvokeDotNet);
 
+function isDesktopUserAgent() {
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  return /Macintosh|MacIntel|MacPPC|Mac68K/.test(ua) || /Mac/.test(platform);
+}
+
+function applyDesktopIdiom(isDesktop, idiomValue = "") {
+  document.body?.setAttribute("data-idiom", idiomValue);
+  if (!openSettingsBtn) return;
+  if (isDesktop) {
+    openSettingsBtn.classList.add("hidden");
+  } else {
+    openSettingsBtn.classList.remove("hidden");
+  }
+}
+
 if (isHybrid) {
   importInput?.classList.add("hidden");
   if (importBtn) {
     importBtn.textContent = "Choose JSON file";
   }
-  openSettingsBtn?.classList.add("hidden");
+  window.HybridWebView.InvokeDotNet("GetDeviceIdiom")
+    .then((idiom) => {
+      const idiomValue = String(idiom).toLowerCase();
+      const isDesktop = idiomValue.includes("desktop");
+      applyDesktopIdiom(isDesktop, idiomValue);
+    })
+    .catch(() => {
+      const isDesktop = isDesktopUserAgent();
+      if (isDesktop) {
+        applyDesktopIdiom(true, "desktop");
+      }
+    });
 }
 
 let currentYear = new Date().getFullYear();

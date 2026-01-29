@@ -1,10 +1,16 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+#if MACCATALYST
+using Microsoft.Maui.LifecycleEvents;
+#endif
 #if IOS || MACCATALYST
 using Foundation;
 using Microsoft.Maui.Handlers;
 using ObjCRuntime;
 using WebKit;
+#endif
+#if MACCATALYST
+using UIKit;
 #endif
 
 namespace SimpleEventsCalenderApp;
@@ -22,6 +28,34 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
+
+#if MACCATALYST
+		builder.ConfigureLifecycleEvents(events =>
+		{
+			events.AddiOS(iOS =>
+			{
+				iOS.SceneWillConnect((scene, _, __) =>
+				{
+					if (!OperatingSystem.IsMacCatalyst())
+					{
+						return;
+					}
+					if (scene is not UIWindowScene windowScene)
+					{
+						return;
+					}
+
+					windowScene.Title = string.Empty;
+					var titlebar = windowScene.Titlebar;
+					if (titlebar != null)
+					{
+						titlebar.TitleVisibility = UITitlebarTitleVisibility.Hidden;
+						titlebar.Toolbar = null;
+					}
+				});
+			});
+		});
+#endif
 
 #if IOS || MACCATALYST
 		HybridWebViewHandler.Mapper.AppendToMapping("EnableWebInspector", (handler, view) =>

@@ -55,6 +55,10 @@ body {
   min-height: 100vh;
 }
 
+body[data-idiom*="desktop"] .settings-btn {
+  display: none;
+}
+
 .hidden {
   display: none;
 }
