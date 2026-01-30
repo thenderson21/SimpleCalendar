@@ -13,12 +13,21 @@ public sealed class YearViewController : UIViewController
 	{
 		base.ViewDidLoad();
 		View.BackgroundColor = UIColor.FromRGB(236, 239, 245);
+		ICloudKeyValueStore.Initialize();
+		ICloudKeyValueStore.CloudStateChanged += OnCloudStateChanged;
 		_ = LoadAsync();
 	}
 
 	private async Task LoadAsync()
 	{
 		_state = await CalendarDataLoader.LoadAsync();
+		InvokeOnMainThread(BuildUI);
+	}
+
+	private void OnCloudStateChanged(string payload)
+	{
+		var next = CalendarDataLoader.Parse(payload);
+		_state = next;
 		InvokeOnMainThread(BuildUI);
 	}
 

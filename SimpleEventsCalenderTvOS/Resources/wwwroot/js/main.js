@@ -1575,6 +1575,7 @@ confirmBlackoutBtn?.addEventListener("click", () => {
 toggleBlackoutBtn?.addEventListener("change", () => {
   if (!selectedDate) return;
   if (toggleBlackoutBtn.checked) {
+    closeDayModalUI();
     if (blackouts.length === 0) {
       openBlackoutModal(null, selectedDate);
       return;

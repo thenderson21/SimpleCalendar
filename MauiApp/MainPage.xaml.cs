@@ -23,6 +23,8 @@ public partial class MainPage : ContentPage
 		WebView.SetInvokeJavaScriptTarget(new HybridBridge(this));
 		ConfigureMenuShortcuts();
 		SetYearLabel(_currentYear);
+		ICloudKeyValueStore.Initialize();
+		ICloudKeyValueStore.CloudStateChanged += OnCloudStateChanged;
 	}
 
 	private void SetYearLabel(int year)
@@ -83,6 +85,17 @@ public partial class MainPage : ContentPage
 			return Task.FromResult(DeviceInfo.Idiom.ToString());
 		}
 
+		public Task<string?> LoadCloudState()
+		{
+			return Task.FromResult(ICloudKeyValueStore.Load());
+		}
+
+		public Task<string> SaveCloudState(string payload)
+		{
+			ICloudKeyValueStore.Save(payload);
+			return Task.FromResult(string.Empty);
+		}
+
 	}
 
 	private async void OnPrevYearClicked(object? sender, EventArgs e)
@@ -106,7 +119,7 @@ public partial class MainPage : ContentPage
 
 	private async void OnMoreClicked(object? sender, EventArgs e)
 	{
-		var choice = await DisplayActionSheet("More", "Cancel", null, "Import", "Export", "Settings");
+		var choice = await DisplayActionSheetAsync("More", "Cancel", null, "Import", "Export", "Settings");
 		switch (choice)
 		{
 			case "Import":
@@ -216,6 +229,20 @@ public partial class MainPage : ContentPage
 	private async void OnSettingsClicked(object? sender, EventArgs e)
 	{
 		await WebView.EvaluateJavaScriptAsync("window.__APP__?.openSettings?.();");
+	}
+
+	private void OnCloudStateChanged(string payload)
+	{
+		if (string.IsNullOrWhiteSpace(payload))
+		{
+			return;
+		}
+
+		var encoded = JsonSerializer.Serialize(payload);
+		MainThread.BeginInvokeOnMainThread(async () =>
+		{
+			await WebView.EvaluateJavaScriptAsync($"window.__APP__?.applyCloudState?.({encoded});");
+		});
 	}
 
 	public Task ExecuteScriptAsync(string script)

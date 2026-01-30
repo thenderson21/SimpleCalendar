@@ -45,17 +45,15 @@ public sealed class CalendarSettings
 
 public static class CalendarDataLoader
 {
-	private const string DefaultFileName = "calendar.sevc";
-
 	public static async Task<CalendarState> LoadAsync()
 	{
 		try
 		{
-			var path = ResolveICloudPath();
-			if (!string.IsNullOrWhiteSpace(path) && File.Exists(path))
+			ICloudKeyValueStore.Initialize();
+			var payload = ICloudKeyValueStore.Load();
+			if (!string.IsNullOrWhiteSpace(payload))
 			{
-				var json = await File.ReadAllTextAsync(path);
-				return Parse(json);
+				return Parse(payload);
 			}
 		}
 		catch
@@ -66,29 +64,7 @@ public static class CalendarDataLoader
 		return CalendarState.Empty;
 	}
 
-	private static string? ResolveICloudPath()
-	{
-		var containerUrl = Foundation.NSFileManager.DefaultManager.GetUrlForUbiquityContainer(null);
-		if (containerUrl == null)
-		{
-			return null;
-		}
-
-		var documentsUrl = containerUrl.Append("Documents", true);
-		Foundation.NSError? error;
-		Foundation.NSFileManager.DefaultManager.CreateDirectory(documentsUrl, true, null, out error);
-		if (error != null)
-		{
-			return null;
-		}
-
-		var documentsPath = documentsUrl.Path;
-		return string.IsNullOrWhiteSpace(documentsPath)
-			? null
-			: Path.Combine(documentsPath, DefaultFileName);
-	}
-
-	private static CalendarState Parse(string json)
+	internal static CalendarState Parse(string json)
 	{
 		if (string.IsNullOrWhiteSpace(json))
 		{
