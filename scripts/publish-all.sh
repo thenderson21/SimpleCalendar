@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_CSPROJ="$ROOT_DIR/MauiApp/SimpleEventsCalenderApp.csproj"
 TVOS_PLIST="$ROOT_DIR/SimpleEventsCalenderTvOS/Info.plist"
+MAC_INSTALLER_CERT="${MAC_INSTALLER_CERT:-3rd Party Mac Developer Installer: Todd Henderson (Y374749ARM)}"
 
 read_csproj_value() {
   python3 - "$APP_CSPROJ" "$1" <<'PY'
@@ -111,13 +112,26 @@ dotnet publish "$APP_CSPROJ" -c Release -f net10.0-ios -o "$RELEASE_DIR/ios"
 echo "Publishing Mac Catalyst..."
 dotnet publish "$APP_CSPROJ" -c Release -f net10.0-maccatalyst -o "$RELEASE_DIR/maccatalyst"
 
+MAC_PKG="$(ls "$RELEASE_DIR/maccatalyst"/*.pkg 2>/dev/null | head -n 1 || true)"
+if [[ -n "$MAC_PKG" ]]; then
+  if ! command -v productsign >/dev/null 2>&1; then
+    echo "productsign not found; cannot sign Mac Catalyst package." >&2
+    exit 1
+  fi
+
+  SIGNED_PKG="$MAC_PKG.signed"
+  echo "Signing Mac Catalyst package with: $MAC_INSTALLER_CERT"
+  productsign --sign "$MAC_INSTALLER_CERT" "$MAC_PKG" "$SIGNED_PKG"
+  mv -f "$SIGNED_PKG" "$MAC_PKG"
+fi
+
 echo "Publishing tvOS..."
 dotnet publish "$ROOT_DIR/SimpleEventsCalenderTvOS/SimpleEventsCalenderTvOS.csproj" -c Release -f net10.0-tvos -o "$RELEASE_DIR/tvos"
 
 NEXT_BUILD="$(bump_version "$BUILD_VERSION")"
 
-replace_csproj_value ApplicationVersion "$NEXT_BUILD"
-replace_plist_value CFBundleVersion "$NEXT_BUILD"
+#replace_csproj_value ApplicationVersion "$NEXT_BUILD"
+#replace_plist_value CFBundleVersion "$NEXT_BUILD"
 
 echo "Published to $RELEASE_DIR"
-echo "Bumped build number to $NEXT_BUILD"
+#echo "Bumped build number to $NEXT_BUILD"

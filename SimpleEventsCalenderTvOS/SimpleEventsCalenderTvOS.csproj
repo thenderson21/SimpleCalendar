@@ -22,4 +22,9 @@
     <CodesignKey>Apple Development: Todd Henderson (6FK66ULWE4)</CodesignKey>
     <CodesignProvision>Simple Cal appleTV dev</CodesignProvision>
   </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <CodesignKey>Apple Distribution: Todd Henderson (Y374749ARM)</CodesignKey>
+    <CodesignProvision>Simple Event tvOS Distribution</CodesignProvision>
+  </PropertyGroup>
 </Project>

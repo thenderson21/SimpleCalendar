@@ -1,7 +1,60 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="SimpleEventsCalenderApp.MainPage">
+             x:Class="SimpleEventsCalenderApp.MainPage"
+             Shell.NavBarIsVisible="{OnIdiom Phone=True, Tablet=True, Desktop=False, Default=False}"
+             Title=" ">
+
+    <ContentPage.Resources>
+        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="BorderColor" Value="Transparent" />
+            <Setter Property="BorderWidth" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1b2233, Dark=#eef2f8}" />
+            <Setter Property="FontSize" Value="18" />
+        </Style>
+        <Style x:Key="TitleBarNavButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
+            <Setter Property="FontSize" Value="30" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Shell.TitleView>
+        <Grid>
+            <Grid x:Name="PhoneTitleBar"
+                  IsVisible="{OnIdiom Phone=True, Tablet=True, Default=False}"
+                  ColumnDefinitions="Auto,*,Auto"
+                  VerticalOptions="Center">
+                <Button Grid.Column="0"
+                        Text="+"
+                        Clicked="OnAddClicked"
+                        Padding="8,4"
+                        HorizontalOptions="Start"
+                        Style="{StaticResource TitleBarButtonStyle}" />
+                <HorizontalStackLayout Grid.Column="1"
+                                       Spacing="6"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center">
+                    <Button Text="‹" Clicked="OnPrevYearClicked" Padding="8,4" Style="{StaticResource TitleBarNavButtonStyle}" />
+                    <Label x:Name="YearLabelMobile"
+                           Text="----"
+                           FontAttributes="Bold"
+                           FontSize="22"
+                           Margin="0,4,0,0"
+                           HorizontalTextAlignment="Center"
+                           VerticalTextAlignment="Center" />
+                    <Button Text="›" Clicked="OnNextYearClicked" Padding="8,4" Style="{StaticResource TitleBarNavButtonStyle}" />
+                </HorizontalStackLayout>
+                <Button Grid.Column="2"
+                        Text="…"
+                        Clicked="OnMoreClicked"
+                        Padding="8,4"
+                        HorizontalOptions="End"
+                        Style="{StaticResource TitleBarButtonStyle}" />
+            </Grid>
+        </Grid>
+    </Shell.TitleView>
 
     <ContentPage.MenuBarItems>
         <MenuBarItem Text="Application">

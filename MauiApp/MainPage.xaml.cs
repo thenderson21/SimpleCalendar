@@ -8,6 +8,7 @@ namespace SimpleEventsCalenderApp;
 public partial class MainPage : ContentPage
 {
 	private const string LastCalendarPathKey = "lastCalendarPath";
+	private int _currentYear = DateTime.Now.Year;
 	private static readonly FilePickerFileType CalendarFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
 	{
 		{ DevicePlatform.MacCatalyst, new[] { "com.simpleeventscalendar.sevc" } },
@@ -21,21 +22,28 @@ public partial class MainPage : ContentPage
 		InitializeComponent();
 		WebView.SetInvokeJavaScriptTarget(new HybridBridge(this));
 		ConfigureMenuShortcuts();
+		SetYearLabel(_currentYear);
+	}
+
+	private void SetYearLabel(int year)
+	{
+		var label = year.ToString();
+		YearLabelMobile.Text = label;
 	}
 
 	private void ConfigureMenuShortcuts()
 	{
-#if WINDOWS || MACCATALYST
-		var modifiers = KeyboardAcceleratorModifiers.None;
 #if WINDOWS
-		modifiers = KeyboardAcceleratorModifiers.Control;
-#elif MACCATALYST
-		modifiers = KeyboardAcceleratorModifiers.Command;
-#endif
 		SettingsMenuItem.KeyboardAccelerators.Add(new KeyboardAccelerator
 		{
 			Key = ",",
-			Modifiers = modifiers
+			Modifiers = KeyboardAcceleratorModifiers.Control
+		});
+#elif MACCATALYST
+		SettingsMenuItem.KeyboardAccelerators.Add(new KeyboardAccelerator
+		{
+			Key = ",",
+			Modifiers = KeyboardAcceleratorModifiers.None
 		});
 #endif
 	}
@@ -73,6 +81,43 @@ public partial class MainPage : ContentPage
 		public Task<string> GetDeviceIdiom()
 		{
 			return Task.FromResult(DeviceInfo.Idiom.ToString());
+		}
+
+	}
+
+	private async void OnPrevYearClicked(object? sender, EventArgs e)
+	{
+		_currentYear -= 1;
+		SetYearLabel(_currentYear);
+		await WebView.EvaluateJavaScriptAsync("window.__APP__?.prevYear?.();");
+	}
+
+	private async void OnNextYearClicked(object? sender, EventArgs e)
+	{
+		_currentYear += 1;
+		SetYearLabel(_currentYear);
+		await WebView.EvaluateJavaScriptAsync("window.__APP__?.nextYear?.();");
+	}
+
+	private async void OnAddClicked(object? sender, EventArgs e)
+	{
+		await WebView.EvaluateJavaScriptAsync("window.__APP__?.openNewEvent?.();");
+	}
+
+	private async void OnMoreClicked(object? sender, EventArgs e)
+	{
+		var choice = await DisplayActionSheet("More", "Cancel", null, "Import", "Export", "Settings");
+		switch (choice)
+		{
+			case "Import":
+				await WebView.EvaluateJavaScriptAsync("window.__APP__?.openImportModal?.();");
+				break;
+			case "Export":
+				await WebView.EvaluateJavaScriptAsync("window.__APP__?.openExportModal?.();");
+				break;
+			case "Settings":
+				 OnSettingsClicked(sender, EventArgs.Empty);
+				break;
 		}
 	}
 
@@ -170,7 +215,12 @@ public partial class MainPage : ContentPage
 
 	private async void OnSettingsClicked(object? sender, EventArgs e)
 	{
-		await WebView.EvaluateJavaScriptAsync("document.getElementById('openSettings')?.click();");
+		await WebView.EvaluateJavaScriptAsync("window.__APP__?.openSettings?.();");
+	}
+
+	public Task ExecuteScriptAsync(string script)
+	{
+		return WebView.EvaluateJavaScriptAsync(script);
 	}
 
 	private async Task ImportCalendarContentAsync(string content)

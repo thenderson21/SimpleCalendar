@@ -55,7 +55,7 @@ body {
   min-height: 100vh;
 }
 
-body[data-idiom*="desktop"] .settings-btn {
+body[data-idiom*="desktop"] .mobile-nav {
   display: none;
 }
 
@@ -68,6 +68,11 @@ body[data-idiom*="desktop"] .settings-btn {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+body[data-idiom*="phone"] .app,
+body[data-idiom*="tablet"] .app {
+  padding-bottom: 96px;
 }
 
 .topbar {
@@ -153,13 +158,36 @@ body[data-idiom*="desktop"] .settings-btn {
   place-items: center;
 }
 
-.settings-btn {
-  width: 60px;
-  height: 60px;
-  font-size: 24px;
-  padding: 0;
-  display: grid;
-  place-items: center;
+.mobile-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(15, 17, 20, 0.88);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 20;
+}
+
+body[data-idiom*="phone"] .mobile-nav,
+body[data-idiom*="tablet"] .mobile-nav {
+  display: flex;
+}
+
+.nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 16px;
+}
+
+.nav-label {
+  font-weight: 600;
 }
 
 .layout {
@@ -203,6 +231,7 @@ body[data-idiom*="desktop"] .settings-btn {
   font-family: "Fraunces", serif;
   font-size: 20px;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .weekdays,
@@ -923,6 +952,14 @@ body[data-idiom*="desktop"] .settings-btn {
   .topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  body:not([data-idiom*="desktop"]) .mobile-nav {
+    display: flex;
+  }
+
+  body:not([data-idiom*="desktop"]) .app {
+    padding-bottom: 96px;
   }
 
   .calendar {

@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:SimpleEventsCalenderApp"
-    Shell.NavBarIsVisible="False"
+    Shell.NavBarIsVisible="{OnIdiom Phone=True, Tablet=True, Desktop=False, Default=False}"
     Shell.FlyoutBehavior="Disabled">
 
     <ShellContent

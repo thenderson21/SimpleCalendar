@@ -481,7 +481,9 @@ function chooseDayNumberColor(colors) {
 
 function renderCalendar() {
   calendarEl.innerHTML = "";
-  yearLabel.textContent = currentYear;
+  if (yearLabel) {
+    yearLabel.textContent = currentYear;
+  }
   const today = new Date();
   const dateMap = dateEntriesByDate();
   const blackoutSet = getBlackoutDateSet();
@@ -1678,5 +1680,6 @@ window.__APP__ = {
   resetCalendar,
   openNewEvent: () => openModal(),
   openNewBlackout: () => openBlackoutModal(),
+  openSettings: () => openSettingsModal(),
   renderAll,
 };

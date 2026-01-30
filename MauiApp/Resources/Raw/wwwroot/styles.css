@@ -55,7 +55,7 @@ body {
   min-height: 100vh;
 }
 
-body[data-idiom*="desktop"] .settings-btn {
+body[data-hybrid="true"] .topbar {
   display: none;
 }
 
@@ -153,15 +153,6 @@ body[data-idiom*="desktop"] .settings-btn {
   place-items: center;
 }
 
-.settings-btn {
-  width: 60px;
-  height: 60px;
-  font-size: 24px;
-  padding: 0;
-  display: grid;
-  place-items: center;
-}
-
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -203,6 +194,7 @@ body[data-idiom*="desktop"] .settings-btn {
   font-family: "Fraunces", serif;
   font-size: 20px;
   margin-bottom: 6px;
+  text-align: center;
 }
 
 .weekdays,

@@ -80,6 +80,9 @@ const performerColorText = document.getElementById("performerColorText");
 const saveSettingsBtn = document.getElementById("saveSettings");
 
 const isHybrid = Boolean(window?.HybridWebView?.InvokeDotNet);
+if (isHybrid) {
+  document.body?.setAttribute("data-hybrid", "true");
+}
 
 function isDesktopUserAgent() {
   const ua = navigator.userAgent || "";
@@ -404,7 +407,9 @@ function markerStyleForEntry(entry) {
 
 function renderCalendar() {
   calendarEl.innerHTML = "";
-  yearLabel.textContent = currentYear;
+  if (yearLabel) {
+    yearLabel.textContent = currentYear;
+  }
   const today = new Date();
   const dateMap = dateEntriesByDate();
   const blackoutSet = getBlackoutDateSet();
@@ -1363,23 +1368,27 @@ function exportJson() {
   }
 }
 
-prevYearBtn.addEventListener("click", () => {
+function goPrevYear() {
   currentYear -= 1;
   renderCalendar();
-});
+}
 
-nextYearBtn.addEventListener("click", () => {
+function goNextYear() {
   currentYear += 1;
   renderCalendar();
-});
+}
 
-todayBtn.addEventListener("click", () => {
+function goToToday() {
   const today = new Date();
   currentYear = today.getFullYear();
   selectedDate = toLocalISO(today);
   renderCalendar();
   renderDayPanel();
-});
+}
+
+prevYearBtn?.addEventListener("click", goPrevYear);
+nextYearBtn?.addEventListener("click", goNextYear);
+todayBtn?.addEventListener("click", goToToday);
 
 eventForm.addEventListener("submit", handleSubmit);
 importBtn?.addEventListener("click", () => {
@@ -1594,7 +1603,16 @@ window.__APP__ = {
   exportState,
   importFromBase64,
   resetCalendar,
+  prevYear: () => goPrevYear(),
+  nextYear: () => goNextYear(),
+  goToToday,
   openNewEvent: () => openModal(),
   openNewBlackout: () => openBlackoutModal(),
+  openSettings: () => openSettingsModal(),
+  openImportModal: () => openImportModal(),
+  openExportModal: () => {
+    openImportModal();
+    exportJson();
+  },
   renderAll,
 };
