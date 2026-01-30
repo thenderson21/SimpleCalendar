@@ -3,22 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
         xmlns:local="clr-namespace:SimpleEventsCalenderApp"
         x:Class="SimpleEventsCalenderApp.MainWindow">
-    <Window.Resources>
-        <Style x:Key="TitleBarButtonStyle" TargetType="Button">
-            <Setter Property="BackgroundColor" Value="Transparent" />
-            <Setter Property="BorderColor" Value="Transparent" />
-            <Setter Property="BorderWidth" Value="0" />
-            <Setter Property="CornerRadius" Value="0" />
-            <Setter Property="TextColor" Value="{AppThemeBinding Light=#1b2233, Dark=#eef2f8}" />
-            <Setter Property="FontSize" Value="30" />
-            <Setter Property="FontAttributes" Value="Bold" />
-        </Style>
-        <Style x:Key="TitleBarNavButtonStyle" TargetType="Button" BasedOn="{StaticResource TitleBarButtonStyle}">
-            <Setter Property="FontSize" Value="" />
-            <Setter Property="FontAttributes" Value="Bold" />
-        </Style>
-    </Window.Resources>
-
     <Window.TitleBar>
         <TitleBar x:Name="AppTitleBar">
             <TitleBar.Content>

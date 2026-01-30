@@ -66,7 +66,9 @@ public static class ICloudKeyValueStore
 		CloudStateChanged?.Invoke(payload);
 	}
 #else
+#pragma warning disable CS0067
 	public static event Action<string>? CloudStateChanged;
+#pragma warning restore CS0067
 
 	public static void Initialize()
 	{
