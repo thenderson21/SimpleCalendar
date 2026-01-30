@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
+# Usage: scripts/publish-all.sh [--no-open-transporter]
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_CSPROJ="$ROOT_DIR/MauiApp/SimpleEventsCalenderApp.csproj"
 TVOS_PLIST="$ROOT_DIR/SimpleEventsCalenderTvOS/Info.plist"
+IOS_PLIST="$ROOT_DIR/MauiApp/Platforms/iOS/Info.plist"
+MAC_PLIST="$ROOT_DIR/MauiApp/Platforms/MacCatalyst/Info.plist"
 MAC_INSTALLER_CERT="${MAC_INSTALLER_CERT:-3rd Party Mac Developer Installer: Todd Henderson (Y374749ARM)}"
+OPEN_TRANSPORTER=true
+
+for arg in "$@"; do
+  case "$arg" in
+    --no-open-transporter)
+      OPEN_TRANSPORTER=false
+      ;;
+  esac
+done
 
 read_csproj_value() {
   python3 - "$APP_CSPROJ" "$1" <<'PY'
@@ -69,8 +81,8 @@ path.write_text(new_text, encoding='utf-8')
 PY
 }
 
-replace_plist_value() {
-  python3 - "$TVOS_PLIST" "$1" "$2" <<'PY'
+replace_plist_value_in() {
+  python3 - "$1" "$2" "$3" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -96,11 +108,16 @@ DISPLAY_VERSION="$(read_csproj_value ApplicationDisplayVersion)"
 BUILD_VERSION="$(read_csproj_value ApplicationVersion)"
 TVOS_SHORT_VERSION="$(read_plist_value CFBundleShortVersionString)"
 
+replace_plist_value_in "$IOS_PLIST" CFBundleShortVersionString "$DISPLAY_VERSION"
+replace_plist_value_in "$IOS_PLIST" CFBundleVersion "$BUILD_VERSION"
+replace_plist_value_in "$MAC_PLIST" CFBundleShortVersionString "$DISPLAY_VERSION"
+replace_plist_value_in "$MAC_PLIST" CFBundleVersion "$BUILD_VERSION"
+
 if [[ "$DISPLAY_VERSION" != "$TVOS_SHORT_VERSION" ]]; then
   echo "Warning: App version ($DISPLAY_VERSION) and tvOS short version ($TVOS_SHORT_VERSION) differ." >&2
 fi
 
-RELEASE_DIR="$ROOT_DIR/releases/${DISPLAY_VERSION}+${BUILD_VERSION}"
+RELEASE_DIR="$ROOT_DIR/releases/${DISPLAY_VERSION}-${BUILD_VERSION}"
 mkdir -p "$RELEASE_DIR"
 
 echo "Publishing Android..."
@@ -131,7 +148,36 @@ dotnet publish "$ROOT_DIR/SimpleEventsCalenderTvOS/SimpleEventsCalenderTvOS.cspr
 NEXT_BUILD="$(bump_version "$BUILD_VERSION")"
 
 #replace_csproj_value ApplicationVersion "$NEXT_BUILD"
-#replace_plist_value CFBundleVersion "$NEXT_BUILD"
+#replace_plist_value_in "$TVOS_PLIST" CFBundleVersion "$NEXT_BUILD"
 
 echo "Published to $RELEASE_DIR"
 #echo "Bumped build number to $NEXT_BUILD"
+
+if [[ "$OPEN_TRANSPORTER" == "true" ]]; then
+  if ! command -v open >/dev/null 2>&1; then
+    echo "open not found; cannot launch Transporter." >&2
+    exit 1
+  fi
+
+  if ! open -Ra "Transporter" >/dev/null 2>&1; then
+    echo "Transporter app not found; skipping open." >&2
+    exit 1
+  fi
+
+  UPLOAD_FILES=()
+  while IFS= read -r file; do
+    UPLOAD_FILES+=("$file")
+  done < <(find "$RELEASE_DIR" -type f \( -name "*.ipa" -o -name "*.pkg" \) | sort)
+
+  if [[ "${#UPLOAD_FILES[@]}" -eq 0 ]]; then
+    echo "No .ipa or .pkg files found for Transporter." >&2
+    exit 1
+  fi
+
+  echo "Opening Transporter with:"
+  for file in "${UPLOAD_FILES[@]}"; do
+    echo "  - $file"
+  done
+
+  open -a "Transporter" "${UPLOAD_FILES[@]}"
+fi

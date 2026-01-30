@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == 'net10.0-tvos' AND '$(Configuration)' == 'Debug'">
+    <CodesignEntitlements>Entitlements.dev.plist</CodesignEntitlements>
     <CodesignKey>Apple Development: Todd Henderson (6FK66ULWE4)</CodesignKey>
     <CodesignProvision>Simple Cal appleTV dev</CodesignProvision>
   </PropertyGroup>
