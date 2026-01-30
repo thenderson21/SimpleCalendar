@@ -93,6 +93,7 @@ export function saveEvents(events) {
       }))
     : [];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+  notifyStateChanged();
 }
 
 export function loadBlackouts() {
@@ -129,6 +130,7 @@ export function saveBlackouts(blackouts) {
         .filter(Boolean)
     : [];
   localStorage.setItem(BLACKOUT_KEY, JSON.stringify(cleaned));
+  notifyStateChanged();
 }
 
 export function normalizeBlackoutGroup(input) {
@@ -161,4 +163,13 @@ export function loadSettings() {
 
 export function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  notifyStateChanged();
+}
+
+function notifyStateChanged() {
+  try {
+    window.__APP__?.onLocalStateChanged?.();
+  } catch (error) {
+    console.warn("Failed to notify state change", error);
+  }
 }

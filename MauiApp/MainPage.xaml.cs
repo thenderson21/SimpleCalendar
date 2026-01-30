@@ -7,7 +7,6 @@ namespace SimpleEventsCalenderApp;
 
 public partial class MainPage : ContentPage
 {
-	private const string LastCalendarPathKey = "lastCalendarPath";
 	private int _currentYear = DateTime.Now.Year;
 	private static readonly FilePickerFileType CalendarFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
 	{
@@ -23,8 +22,8 @@ public partial class MainPage : ContentPage
 		WebView.SetInvokeJavaScriptTarget(new HybridBridge(this));
 		ConfigureMenuShortcuts();
 		SetYearLabel(_currentYear);
-		ICloudKeyValueStore.Initialize();
-		ICloudKeyValueStore.CloudStateChanged += OnCloudStateChanged;
+		CloudKitCalendarStore.Initialize();
+		CloudKitCalendarStore.CloudStateChanged += OnCloudStateChanged;
 	}
 
 	private void SetYearLabel(int year)
@@ -87,13 +86,12 @@ public partial class MainPage : ContentPage
 
 		public Task<string?> LoadCloudState()
 		{
-			return Task.FromResult(ICloudKeyValueStore.Load());
+			return CloudKitCalendarStore.LoadAsync();
 		}
 
 		public Task<string> SaveCloudState(string payload)
 		{
-			ICloudKeyValueStore.Save(payload);
-			return Task.FromResult(string.Empty);
+			return CloudKitCalendarStore.SaveAsync(payload);
 		}
 
 	}
@@ -145,13 +143,6 @@ public partial class MainPage : ContentPage
 				return;
 			}
 
-#if IOS || MACCATALYST || TVOS
-			if (await TrySaveToICloudAsync(json))
-			{
-				return;
-			}
-#endif
-
 			var bytes = Encoding.UTF8.GetBytes(json);
 			await using var stream = new MemoryStream(bytes);
 			var result = await FileSaver.Default.SaveAsync("calendar.sevc", stream);
@@ -170,15 +161,6 @@ public partial class MainPage : ContentPage
 	{
 		try
 		{
-#if IOS || MACCATALYST || TVOS
-			var iCloudContent = await TryReadFromICloudAsync();
-			if (!string.IsNullOrWhiteSpace(iCloudContent))
-			{
-				await ImportCalendarContentAsync(iCloudContent);
-				return;
-			}
-#endif
-
 			var result = await FilePicker.Default.PickAsync(new PickOptions
 			{
 				FileTypes = CalendarFileType,
@@ -257,68 +239,6 @@ public partial class MainPage : ContentPage
 		var script = $"window.__APP__?.importFromBase64?.({encoded}, \"replace\");";
 		await WebView.EvaluateJavaScriptAsync(script);
 	}
-
-#if IOS || MACCATALYST || TVOS
-	private static string? TryGetICloudDocumentsDirectory()
-	{
-		var containerUrl = Foundation.NSFileManager.DefaultManager.GetUrlForUbiquityContainer(null);
-		if (containerUrl == null)
-		{
-			return null;
-		}
-
-		var documentsUrl = containerUrl.Append("Documents", true);
-		Foundation.NSError? error;
-		Foundation.NSFileManager.DefaultManager.CreateDirectory(documentsUrl, true, null, out error);
-		if (error != null)
-		{
-			return null;
-		}
-
-		return documentsUrl.Path;
-	}
-
-	private static string? ResolveICloudCalendarPath()
-	{
-		var last = Preferences.Default.Get(LastCalendarPathKey, string.Empty);
-		if (!string.IsNullOrWhiteSpace(last))
-		{
-			return last;
-		}
-
-		var directory = TryGetICloudDocumentsDirectory();
-		if (string.IsNullOrWhiteSpace(directory))
-		{
-			return null;
-		}
-
-		return Path.Combine(directory, "calendar.sevc");
-	}
-
-	private static async Task<bool> TrySaveToICloudAsync(string json)
-	{
-		var path = ResolveICloudCalendarPath();
-		if (string.IsNullOrWhiteSpace(path))
-		{
-			return false;
-		}
-
-		await File.WriteAllTextAsync(path, json);
-		Preferences.Default.Set(LastCalendarPathKey, path);
-		return true;
-	}
-
-	private static async Task<string?> TryReadFromICloudAsync()
-	{
-		var path = ResolveICloudCalendarPath();
-		if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-		{
-			return null;
-		}
-
-		return await File.ReadAllTextAsync(path);
-	}
-#endif
 
 	// Help is provided by the system Help menu + help book bundle.
 }

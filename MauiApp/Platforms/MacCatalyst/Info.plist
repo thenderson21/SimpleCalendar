@@ -47,10 +47,8 @@
 	<string>Simple Events Calendar</string>
 	<key>CFBundleName</key>
 	<string>Simple Events Calendar</string>
-	\11.0.0\3
-	\12\3
 	<key>NSHumanReadableCopyright</key>
-	<string>© 2026 Todd Henderson</string>
+	<string>©2026 Todd Henderson</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

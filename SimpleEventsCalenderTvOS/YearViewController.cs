@@ -13,8 +13,8 @@ public sealed class YearViewController : UIViewController
 	{
 		base.ViewDidLoad();
 		View.BackgroundColor = UIColor.FromRGB(236, 239, 245);
-		ICloudKeyValueStore.Initialize();
-		ICloudKeyValueStore.CloudStateChanged += OnCloudStateChanged;
+		CloudKitCalendarStore.Initialize();
+		CloudKitCalendarStore.CloudStateChanged += OnCloudStateChanged;
 		_ = LoadAsync();
 	}
 

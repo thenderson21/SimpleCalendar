@@ -80,6 +80,49 @@ const performerColorText = document.getElementById("performerColorText");
 const saveSettingsBtn = document.getElementById("saveSettings");
 
 const isHybrid = Boolean(window?.HybridWebView?.InvokeDotNet);
+if (isHybrid) {
+  document.body?.setAttribute("data-hybrid", "true");
+}
+
+let applyingCloudState = false;
+let lastCloudPayload = null;
+let cloudSyncTimer = null;
+
+function scheduleCloudSync() {
+  if (!isHybrid || applyingCloudState) return;
+  if (cloudSyncTimer) {
+    clearTimeout(cloudSyncTimer);
+  }
+  cloudSyncTimer = setTimeout(() => {
+    const payload = exportState();
+    window.HybridWebView.InvokeDotNet("SaveCloudState", payload).catch(() => {});
+  }, 500);
+}
+
+function applyCloudState(payload) {
+  if (!payload || payload === lastCloudPayload) return;
+  applyingCloudState = true;
+  try {
+    handleImportPayload(payload, "replace");
+    lastCloudPayload = payload;
+  } finally {
+    applyingCloudState = false;
+  }
+}
+
+function loadCloudState() {
+  if (!isHybrid) return;
+  window.HybridWebView
+    .InvokeDotNet("LoadCloudState")
+    .then((payload) => {
+      if (payload) {
+        applyCloudState(payload);
+      } else {
+        scheduleCloudSync();
+      }
+    })
+    .catch(() => {});
+}
 
 function isDesktopUserAgent() {
   const ua = navigator.userAgent || "";
@@ -1362,23 +1405,29 @@ function exportJson() {
   }
 }
 
-prevYearBtn.addEventListener("click", () => {
+function goPrevYear() {
   currentYear -= 1;
   renderCalendar();
-});
+}
 
-nextYearBtn.addEventListener("click", () => {
+function goNextYear() {
   currentYear += 1;
   renderCalendar();
-});
+}
 
-todayBtn.addEventListener("click", () => {
+function goToToday() {
   const today = new Date();
   currentYear = today.getFullYear();
   selectedDate = toLocalISO(today);
   renderCalendar();
   renderDayPanel();
-});
+}
+
+prevYearBtn.addEventListener("click", goPrevYear);
+
+nextYearBtn.addEventListener("click", goNextYear);
+
+todayBtn.addEventListener("click", goToToday);
 
 eventForm.addEventListener("submit", handleSubmit);
 importBtn?.addEventListener("click", () => {
@@ -1574,6 +1623,7 @@ performerCheck.addEventListener("change", syncStatusInputs);
 
 renderCalendar();
 renderDayPanel();
+loadCloudState();
 
 window.__APP__ = {
   getState: () => ({
@@ -1593,7 +1643,18 @@ window.__APP__ = {
   exportState,
   importFromBase64,
   resetCalendar,
+  onLocalStateChanged: () => scheduleCloudSync(),
+  applyCloudState: (payload) => applyCloudState(payload),
+  prevYear: () => goPrevYear(),
+  nextYear: () => goNextYear(),
+  goToToday,
   openNewEvent: () => openModal(),
   openNewBlackout: () => openBlackoutModal(),
+  openSettings: () => openSettingsModal(),
+  openImportModal: () => openImportModal(),
+  openExportModal: () => {
+    openImportModal();
+    exportJson();
+  },
   renderAll,
 };

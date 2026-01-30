@@ -32,8 +32,6 @@
 	<string>Simple Events Calendar</string>
 	<key>CFBundleName</key>
 	<string>Simple Events Calendar</string>
-	\11.0.0\3
-	\12\3
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

@@ -5,8 +5,6 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_CSPROJ="$ROOT_DIR/MauiApp/SimpleEventsCalenderApp.csproj"
 TVOS_PLIST="$ROOT_DIR/SimpleEventsCalenderTvOS/Info.plist"
-IOS_PLIST="$ROOT_DIR/MauiApp/Platforms/iOS/Info.plist"
-MAC_PLIST="$ROOT_DIR/MauiApp/Platforms/MacCatalyst/Info.plist"
 MAC_INSTALLER_CERT="${MAC_INSTALLER_CERT:-3rd Party Mac Developer Installer: Todd Henderson (Y374749ARM)}"
 OPEN_TRANSPORTER=true
 
@@ -81,37 +79,9 @@ path.write_text(new_text, encoding='utf-8')
 PY
 }
 
-replace_plist_value_in() {
-  python3 - "$1" "$2" "$3" <<'PY'
-import re
-import sys
-from pathlib import Path
-
-path = Path(sys.argv[1])
-key = sys.argv[2]
-value = sys.argv[3]
-raw = path.read_bytes()
-text = raw.decode('utf-8-sig')
-bom = raw.startswith(b'\xef\xbb\xbf')
-pattern = rf"(<key>{re.escape(key)}</key>\s*<string>)(.*?)(</string>)"
-new_text, count = re.subn(pattern, rf"\\1{value}\\3", text, flags=re.DOTALL)
-if count != 1:
-    raise SystemExit(f"Expected single {key} in {path}, found {count}")
-if bom:
-    path.write_bytes(new_text.encode('utf-8-sig'))
-else:
-    path.write_text(new_text, encoding='utf-8')
-PY
-}
-
 DISPLAY_VERSION="$(read_csproj_value ApplicationDisplayVersion)"
 BUILD_VERSION="$(read_csproj_value ApplicationVersion)"
 TVOS_SHORT_VERSION="$(read_plist_value CFBundleShortVersionString)"
-
-replace_plist_value_in "$IOS_PLIST" CFBundleShortVersionString "$DISPLAY_VERSION"
-replace_plist_value_in "$IOS_PLIST" CFBundleVersion "$BUILD_VERSION"
-replace_plist_value_in "$MAC_PLIST" CFBundleShortVersionString "$DISPLAY_VERSION"
-replace_plist_value_in "$MAC_PLIST" CFBundleVersion "$BUILD_VERSION"
 
 if [[ "$DISPLAY_VERSION" != "$TVOS_SHORT_VERSION" ]]; then
   echo "Warning: App version ($DISPLAY_VERSION) and tvOS short version ($TVOS_SHORT_VERSION) differ." >&2
@@ -148,7 +118,7 @@ dotnet publish "$ROOT_DIR/SimpleEventsCalenderTvOS/SimpleEventsCalenderTvOS.cspr
 NEXT_BUILD="$(bump_version "$BUILD_VERSION")"
 
 #replace_csproj_value ApplicationVersion "$NEXT_BUILD"
-#replace_plist_value_in "$TVOS_PLIST" CFBundleVersion "$NEXT_BUILD"
+#replace_plist_value CFBundleVersion "$NEXT_BUILD"
 
 echo "Published to $RELEASE_DIR"
 #echo "Bumped build number to $NEXT_BUILD"

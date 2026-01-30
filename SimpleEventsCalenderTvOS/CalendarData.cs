@@ -49,8 +49,8 @@ public static class CalendarDataLoader
 	{
 		try
 		{
-			ICloudKeyValueStore.Initialize();
-			var payload = ICloudKeyValueStore.Load();
+			CloudKitCalendarStore.Initialize();
+			var payload = await CloudKitCalendarStore.LoadAsync();
 			if (!string.IsNullOrWhiteSpace(payload))
 			{
 				return Parse(payload);
